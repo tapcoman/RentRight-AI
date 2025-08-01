@@ -248,7 +248,7 @@ export default function DocumentAnalysis() {
               handlePaymentComplete(true, serviceType, email);
             }}
           />
-          {(isAnalysisComplete || isFullAnalysisComplete) && analysis ? (
+          {analysis && (analysis.results || isAnalysisComplete || isFullAnalysisComplete) ? (
             <div className="space-y-8">
               {/* Analysis Results - Display Immediately */}
               <AnalysisPanel
