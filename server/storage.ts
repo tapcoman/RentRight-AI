@@ -385,6 +385,16 @@ export class DatabaseStorage implements IStorage {
         .from(analyses)
         .where(eq(analyses.documentId, documentId));
       
+      if (analysis) {
+        console.log('🗄️ Storage retrieved analysis:', {
+          id: analysis.id,
+          documentId: analysis.documentId,
+          isPaid: analysis.isPaid,
+          hasResults: !!analysis.results,
+          resultsType: typeof analysis.results
+        });
+      }
+      
       return analysis;
     } catch (error) {
       console.error('Error getting analysis by document ID:', error);
@@ -394,6 +404,14 @@ export class DatabaseStorage implements IStorage {
 
   async createAnalysis(insertAnalysis: InsertAnalysis): Promise<Analysis> {
     try {
+      console.log('🗄️ Storage creating analysis:', {
+        documentId: insertAnalysis.documentId,
+        isPaid: insertAnalysis.isPaid,
+        hasResults: !!insertAnalysis.results,
+        resultsType: typeof insertAnalysis.results,
+        resultsHasInsights: insertAnalysis.results && typeof insertAnalysis.results === 'object' && 'insights' in insertAnalysis.results
+      });
+      
       // Ensure created_at is set for database cleanup
       const [analysis] = await db
         .insert(analyses)
@@ -404,6 +422,12 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
       
+      console.log('🗄️ Storage created analysis successfully:', {
+        id: analysis.id,
+        documentId: analysis.documentId,
+        isPaid: analysis.isPaid
+      });
+      
       return analysis;
     } catch (error) {
       console.error('Error creating analysis:', error);
@@ -413,11 +437,27 @@ export class DatabaseStorage implements IStorage {
 
   async updateAnalysis(id: number, updates: Partial<Analysis>): Promise<Analysis | undefined> {
     try {
+      console.log('🗄️ Storage updating analysis:', {
+        analysisId: id,
+        updateKeys: Object.keys(updates),
+        hasResults: !!updates.results,
+        resultsType: typeof updates.results,
+        resultsHasInsights: updates.results && typeof updates.results === 'object' && 'insights' in updates.results
+      });
+      
       const [updatedAnalysis] = await db
         .update(analyses)
         .set(updates)
         .where(eq(analyses.id, id))
         .returning();
+      
+      if (updatedAnalysis) {
+        console.log('🗄️ Storage updated analysis successfully:', {
+          id: updatedAnalysis.id,
+          documentId: updatedAnalysis.documentId,
+          isPaid: updatedAnalysis.isPaid
+        });
+      }
       
       return updatedAnalysis;
     } catch (error) {

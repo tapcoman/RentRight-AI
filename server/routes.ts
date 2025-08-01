@@ -1345,6 +1345,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Otherwise, update existing analysis with real results
         console.log(`Updating existing analysis (ID: ${existingAnalysisId}) with real paid results for document ${id}`);
+        console.log('💾 Final results being stored (update):', {
+          hasInsights: !!finalResults.insights,
+          insightsCount: finalResults.insights?.length || 0,
+          resultsKeys: Object.keys(finalResults),
+          firstInsight: finalResults.insights?.[0],
+          resultsSize: JSON.stringify(finalResults).length
+        });
+        
         analysis = await storage.updateAnalysis(existingAnalysisId, {
           results: finalResults,
           isPaid: true
@@ -1352,6 +1360,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // Create new analysis with real results
         console.log(`Creating new paid analysis for document ${id}`);
+        console.log('💾 Final results being stored:', {
+          hasInsights: !!finalResults.insights,
+          insightsCount: finalResults.insights?.length || 0,
+          resultsKeys: Object.keys(finalResults),
+          firstInsight: finalResults.insights?.[0],
+          resultsSize: JSON.stringify(finalResults).length
+        });
+        
         analysis = await storage.createAnalysis({
           documentId: id,
           results: finalResults,
@@ -1448,7 +1464,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const analysis = await storage.getAnalysisByDocumentId(id);
       if (!analysis) {
+        console.log(`🔍 No analysis found for document ${id}`);
         return res.status(404).json({ message: 'Analysis not found' });
+      }
+
+      // Debug logging for analysis retrieval
+      console.log('🔍 Retrieved analysis from database:', {
+        analysisId: analysis.id,
+        documentId: analysis.documentId,
+        isPaid: analysis.isPaid,
+        hasResults: !!analysis.results,
+        resultsType: typeof analysis.results,
+        resultsSize: analysis.results ? JSON.stringify(analysis.results).length : 0
+      });
+
+      // Check if results contains insights
+      let parsedResults = analysis.results;
+      if (typeof analysis.results === 'string') {
+        try {
+          parsedResults = JSON.parse(analysis.results);
+          console.log('📋 Parsed string results for analysis:', {
+            hasInsights: !!parsedResults?.insights,
+            insightsCount: parsedResults?.insights?.length || 0
+          });
+        } catch (error) {
+          console.error('❌ Failed to parse analysis results:', error);
+        }
+      } else {
+        console.log('📋 Raw results for analysis:', {
+          hasInsights: !!parsedResults?.insights,
+          insightsCount: parsedResults?.insights?.length || 0,
+          resultKeys: parsedResults ? Object.keys(parsedResults) : []
+        });
       }
 
       return res.json(analysis);

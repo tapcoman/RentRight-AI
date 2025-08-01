@@ -36,6 +36,20 @@ export function useDocumentAnalysis(documentId: number) {
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
     // Completely suppress errors for this query since no analysis is expected for new docs
     throwOnError: false,
+    onSuccess: (data) => {
+      console.log('🔍 Analysis data fetched successfully:', {
+        hasData: !!data,
+        dataType: typeof data,
+        hasResults: !!data?.results,
+        resultsType: typeof data?.results,
+        hasInsights: !!data?.results?.insights,
+        insightsCount: data?.results?.insights?.length || 0,
+        fullData: data
+      });
+    },
+    onError: (error) => {
+      console.log('⚠️ Analysis fetch error (expected for new docs):', error);
+    }
   });
 
 
@@ -90,11 +104,55 @@ export function useDocumentAnalysis(documentId: number) {
     },
   });
 
-  // Report generation function - now redirects to the HTML report view
-  const generateReport = (isPaid: boolean = false, paymentIntentId?: string) => {
-    if (isPaid) {
-      // Open the report view page in a new tab
-      window.open(`/analysis/${documentId}/report`, '_blank');
+  // Report generation function - generates PDF without redirecting away from analysis
+  const generateReport = async (isPaid: boolean = false, paymentIntentId?: string) => {
+    if (!isPaid) return;
+    
+    try {
+      const response = await fetch(`/api/documents/${documentId}/generate-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentIntentId: paymentIntentId || undefined,
+          format: 'pdf'
+        }),
+      });
+
+      if (response.ok) {
+        // Trigger PDF download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tenancy-analysis-report-${documentId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: "Report Generated",
+          description: "Your PDF report has been downloaded.",
+        });
+        
+        // Also offer option to view HTML report in new tab
+        const viewReportButton = document.createElement('button');
+        viewReportButton.textContent = 'View Full Report';
+        viewReportButton.onclick = () => window.open(`/analysis/${documentId}/report`, '_blank');
+        
+      } else {
+        throw new Error('Failed to generate report');
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
 

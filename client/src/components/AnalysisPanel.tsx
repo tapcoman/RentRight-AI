@@ -34,10 +34,45 @@ export default function AnalysisPanel({
   const [reportError, setReportError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const results = analysis?.results as any;
+  // Enhanced result processing to handle both string and object formats
+  const results = (() => {
+    const rawResults = analysis?.results;
+    
+    if (!rawResults) {
+      console.log('🔍 No raw results found');
+      return null;
+    }
+    
+    // If results is already an object, use it directly
+    if (typeof rawResults === 'object') {
+      console.log('🔍 Results is already an object:', {
+        hasInsights: !!rawResults.insights,
+        insightsCount: rawResults.insights?.length || 0
+      });
+      return rawResults;
+    }
+    
+    // If results is a string, try to parse it
+    if (typeof rawResults === 'string') {
+      try {
+        const parsed = JSON.parse(rawResults);
+        console.log('🔍 Successfully parsed string results:', {
+          hasInsights: !!parsed.insights,
+          insightsCount: parsed.insights?.length || 0
+        });
+        return parsed;
+      } catch (error) {
+        console.error('🔍 Failed to parse results string:', error);
+        return null;
+      }
+    }
+    
+    console.log('🔍 Unknown results format:', typeof rawResults);
+    return null;
+  })();
   
-  // Debug logging for analysis panel
-  console.log('AnalysisPanel Debug:', {
+  // Enhanced debug logging for analysis panel
+  console.log('🔍 AnalysisPanel Debug:', {
     hasAnalysis: !!analysis,
     isPaidAnalysis,
     hasResults: !!results,
@@ -46,7 +81,10 @@ export default function AnalysisPanel({
     analysisStructure: results ? Object.keys(results) : [],
     analysisId: analysis?.id,
     documentId: analysis?.documentId,
-    rawResults: results
+    analysisIsPaid: analysis?.isPaid,
+    resultsType: typeof results,
+    insightsType: typeof results?.insights,
+    firstInsight: results?.insights?.[0]
   });
 
   const handleShowPaymentModal = () => {
@@ -202,11 +240,23 @@ export default function AnalysisPanel({
         </div>
       )}
 
-      {/* Clean Analysis Content - Show for both paid and free analyses */}
-      {results?.insights && results.insights.length > 0 ? (
+      {/* Enhanced Analysis Content with Better Error Handling */}
+      {(() => {
+        const hasInsights = results?.insights && Array.isArray(results.insights) && results.insights.length > 0;
+        
+        console.log('🎯 Render condition check:', {
+          hasResults: !!results,
+          hasInsights,
+          insightsCount: results?.insights?.length || 0,
+          isPaidAnalysis,
+          resultsType: typeof results
+        });
+        
+        return hasInsights;
+      })() ? (
         <div className="px-6 pb-6">
           <div className="space-y-4">
-            {results.insights.map((insight: any, index: number) => (
+            {(results?.insights || []).map((insight: any, index: number) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3">
@@ -270,12 +320,15 @@ export default function AnalysisPanel({
       ) : isPaidAnalysis ? (
         <div className="px-6 pb-6">
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-slate-600" />
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2v6l4 2"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Analysis Results Found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Analysis in Progress</h3>
             <p className="text-gray-600 mb-4">
-              Your analysis is complete, but no results data was found. This may be a temporary issue.
+              Your premium analysis is being generated. Results will appear here automatically when complete.
             </p>
             <Button onClick={() => window.location.reload()} variant="outline">
               Refresh Page
@@ -284,8 +337,8 @@ export default function AnalysisPanel({
         </div>
       ) : null}
 
-      {/* Clean Generate Report Section */}
-      {isPaidAnalysis && (
+      {/* Clean Generate Report Section - Only show if analysis has results */}
+      {isPaidAnalysis && results?.insights && results.insights.length > 0 && (
         <div className="mx-6 mb-6 pt-6 border-t border-gray-100">
           {reportError && (
             <Alert className="mb-6 border-red-200 bg-red-50">
@@ -307,47 +360,62 @@ export default function AnalysisPanel({
                   <path d="M10 9H8"/>
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to Download Your Report</h3>
-              <p className="text-gray-600 text-sm mb-6">Get a comprehensive PDF report with all findings and recommendations</p>
-              <Button 
-                disabled={isGeneratingReport}
-                loading={isGeneratingReport}
-                loadingText="Generating Report..."
-                onClick={async () => {
-                  try {
-                    setIsGeneratingReport(true);
-                    setReportError(null);
-                    await onGenerateReport(isPaidAnalysis, lastPaymentId || undefined);
-                    
-                    toast({
-                      title: 'Report Generated',
-                      description: 'Your PDF report has been generated successfully.',
-                      variant: 'default'
-                    });
-                  } catch (error: any) {
-                    const errorMessage = error.message || 'Failed to generate report. Please try again.';
-                    setReportError(errorMessage);
-                    toast({
-                      title: 'Report Generation Failed',
-                      description: errorMessage,
-                      variant: 'destructive'
-                    });
-                  } finally {
-                    setIsGeneratingReport(false);
-                  }
-                }}
-                size="lg"
-                className="font-semibold px-8 py-3"
-              >
-                {!isGeneratingReport && (
-                  <>
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                    </svg>
-                    Generate PDF Report
-                  </>
-                )}
-              </Button>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Export Your Analysis</h3>
+              <p className="text-gray-600 text-sm mb-6">Download a PDF or view the full interactive report</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  disabled={isGeneratingReport}
+                  loading={isGeneratingReport}
+                  loadingText="Generating PDF..."
+                  onClick={async () => {
+                    try {
+                      setIsGeneratingReport(true);
+                      setReportError(null);
+                      await onGenerateReport(isPaidAnalysis, lastPaymentId || undefined);
+                      
+                      toast({
+                        title: 'PDF Downloaded',
+                        description: 'Your PDF report has been generated and downloaded.',
+                        variant: 'default'
+                      });
+                    } catch (error: any) {
+                      const errorMessage = error.message || 'Failed to generate report. Please try again.';
+                      setReportError(errorMessage);
+                      toast({
+                        title: 'Report Generation Failed',
+                        description: errorMessage,
+                        variant: 'destructive'
+                      });
+                    } finally {
+                      setIsGeneratingReport(false);
+                    }
+                  }}
+                  size="lg"
+                  className="font-semibold px-6 py-3"
+                >
+                  {!isGeneratingReport && (
+                    <>
+                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                      </svg>
+                      Download PDF
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => window.open(`/analysis/${analysis.documentId}/report`, '_blank')}
+                  size="lg"
+                  className="font-semibold px-6 py-3"
+                >
+                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15,3 21,3 21,9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                  View Full Report
+                </Button>
+              </div>
               
               {isGeneratingReport && (
                 <p className="text-sm text-gray-600 mt-3">
