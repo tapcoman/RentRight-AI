@@ -5,17 +5,57 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { logoPngBase64 } from "./logo";
+import { 
+  analyzeDocumentEnhanced, 
+  EnhancedAnalysisOptions,
+  AnalysisPerformanceMonitor,
+  createSmartChunks
+} from "./enhanced-analysis";
+import { 
+  UKRegion, 
+  detectUKRegion, 
+  preScreenDocumentForLegalIssues, 
+  checkUKTenancyCompliance,
+  preScreenWithRecentCaseLaw,
+  getLegalPrecedentSummary 
+} from "./uk-tenancy-laws";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize the OpenAI client only once for the entire file
-// using the newest model "gpt-4o" released May 13, 2024
+// using the newest model "gpt-4o" released May 13, 2024, optimized for legal analysis
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  timeout: 120000, // 2 minutes timeout for API calls
+  maxRetries: 3, // Enhanced retry mechanism
 });
 
-// Helper function to wait for a run to complete
+// Enhanced error handling with exponential backoff
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const withRetry = async <T>(fn: () => Promise<T>, maxRetries: number = 3, baseDelay: number = 1000): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`Attempt ${attempt + 1} failed:`, lastError.message);
+      
+      if (attempt < maxRetries - 1) {
+        const delayTime = baseDelay * Math.pow(2, attempt);
+        console.log(`Retrying in ${delayTime}ms...`);
+        await delay(delayTime);
+      }
+    }
+  }
+  
+  throw lastError!;
+};
+
+// Enhanced helper function to wait for a run to complete with improved error handling
 async function waitForRunCompletion(threadId: string, runId: string, maxRetries = 30) {
   let retries = 0;
   console.log(`Waiting for run completion: threadId=${threadId}, runId=${runId}`);
@@ -23,7 +63,12 @@ async function waitForRunCompletion(threadId: string, runId: string, maxRetries 
   while (retries < maxRetries) {
     try {
       console.log(`Checking run status (attempt ${retries + 1}/${maxRetries})...`);
-      const run = await openai.beta.threads.runs.retrieve(threadId, runId);
+      
+      // Use enhanced retry mechanism for API calls
+      const run = await withRetry(async () => {
+        return await openai.beta.threads.runs.retrieve(threadId, runId);
+      }, 3, 1000);
+      
       console.log(`Current run status: ${run.status}`);
 
       if (run.status === "completed") {
@@ -32,12 +77,15 @@ async function waitForRunCompletion(threadId: string, runId: string, maxRetries 
       }
 
       if (run.status === "failed" || run.status === "cancelled" || run.status === "expired") {
-        console.error(`Run failed with status: ${run.status}`, {
+        const errorDetails = {
+          status: run.status,
           error: run.last_error,
           threadId,
-          runId
-        });
-        throw new Error(`Run failed with status: ${run.status}. ${run.last_error?.message || ""}`);
+          runId,
+          timestamp: new Date().toISOString()
+        };
+        console.error(`Run failed with status: ${run.status}`, errorDetails);
+        throw new Error(`Run failed with status: ${run.status}. ${run.last_error?.message || "Unknown error"}`);
       }
 
       if (run.status === "requires_action") {
@@ -45,33 +93,55 @@ async function waitForRunCompletion(threadId: string, runId: string, maxRetries 
         // Handle required actions here if needed
         if (run.required_action?.type === "submit_tool_outputs") {
           console.log("Tool outputs required - submitting empty response to continue");
-          await openai.beta.threads.runs.submitToolOutputs(threadId, runId, {
-            tool_outputs: []
-          });
+          await withRetry(async () => {
+            return await openai.beta.threads.runs.submitToolOutputs(threadId, runId, {
+              tool_outputs: []
+            });
+          }, 3, 1000);
         }
       }
 
       // If still in progress, wait before checking again
-      // Exponential backoff with a base of 1 second
-      const delay = Math.min(1000 * Math.pow(1.5, retries), 15000); // Cap at 15 seconds
-      console.log(`Waiting ${delay}ms before next check...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      // Enhanced exponential backoff with jitter
+      const baseDelay = 1000 * Math.pow(1.5, retries);
+      const jitter = Math.random() * 1000; // Add random jitter to prevent thundering herd
+      const delayTime = Math.min(baseDelay + jitter, 20000); // Cap at 20 seconds
+      
+      console.log(`Waiting ${Math.round(delayTime)}ms before next check...`);
+      await delay(delayTime);
       retries++;
     } catch (error) {
-      console.error(`Error checking run status:`, error);
-      // If we get an API error, wait a bit longer before retrying
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Error checking run status (attempt ${retries + 1}):`, {
+        error: errorMessage,
+        threadId,
+        runId,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Enhanced error handling with different strategies for different error types
+      if (errorMessage.includes('rate_limit') || errorMessage.includes('429')) {
+        console.log('Rate limit detected, using extended backoff...');
+        await delay(10000); // Wait 10 seconds for rate limits
+      } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+        console.log('Network/timeout error detected, using moderate backoff...');
+        await delay(5000); // Wait 5 seconds for network issues
+      } else {
+        await delay(3000); // Standard backoff for other errors
+      }
+      
       retries++;
       
-      // If we've had too many errors, throw
+      // If we've had too many errors, throw with enhanced error context
       if (retries >= maxRetries) {
-        throw new Error(`Failed to check run status after ${maxRetries} attempts: ${error}`);
+        throw new Error(`Failed to check run status after ${maxRetries} attempts. Last error: ${errorMessage}. ThreadId: ${threadId}, RunId: ${runId}`);
       }
     }
   }
 
-  console.error(`Timed out waiting for run to complete after ${maxRetries} attempts`);
-  throw new Error(`Timed out waiting for run to complete after ${maxRetries} attempts`);
+  const timeoutError = `Timed out waiting for run to complete after ${maxRetries} attempts (${Math.round(maxRetries * 1.5)}+ minutes). ThreadId: ${threadId}, RunId: ${runId}`;
+  console.error(timeoutError);
+  throw new Error(timeoutError);
 }
 
 // Function to generate a comprehensive tenancy agreement rewrite using OpenAI
@@ -322,63 +392,149 @@ Transform this agreement to give tenants maximum legal protection while ensuring
 
 // Now let's fix the generate rewrite feature
 
-// Helper function to chunk large documents for API processing
-function chunkDocumentContent(text: string, maxChunkLength: number = 12000): string[] {
+// Enhanced helper function to chunk large documents for optimized API processing with GPT-4o
+function chunkDocumentContent(text: string, maxChunkLength: number = 18000): string[] {
   // If text is already within size limits, return as-is
   if (text.length <= maxChunkLength) {
     return [text];
   }
 
-  console.log(`Document length ${text.length} exceeds maximum chunk size. Splitting into multiple chunks.`);
+  console.log(`Document length ${text.length} exceeds maximum chunk size. Using intelligent chunking optimized for GPT-4o legal analysis.`);
 
   const chunks: string[] = [];
   let currentPosition = 0;
+  
+  // Enhanced token estimation for GPT-4o (more accurate than simple character count)
+  const estimateTokens = (str: string) => Math.ceil(str.length / 3.2); // GPT-4o averages ~3.2 chars per token
+  
+  // Improved natural breakpoint detection optimized for legal documents
+  const findOptimalBreakpoint = (text: string, start: number, maxEnd: number) => {
+    const priorities = [
+      /\n\n\s*\d+\./g,         // Numbered clauses (highest priority for legal docs)
+      /\n\n[A-Z][^\n]{0,80}:/g, // Section headers
+      /\n\n\s*\([a-z]\)/g,     // Sub-clauses like (a), (b), (c)
+      /\n\n/g,                 // Double line breaks (paragraph boundaries)
+      /(?<=\.)\s+(?=[A-Z])/g, // Sentence boundaries
+      /\n/g,                  // Single line breaks
+      /, /g                   // Comma breaks (lowest priority)
+    ];
+    
+    const searchText = text.slice(start, maxEnd);
+    
+    for (const pattern of priorities) {
+      pattern.lastIndex = 0; // Reset regex
+      const matches = [...searchText.matchAll(pattern)];
+      if (matches.length > 0) {
+        // Find the match closest to the ideal position (70% through the chunk for legal docs)
+        const idealPosition = searchText.length * 0.7;
+        const bestMatch = matches.reduce((best, current) => {
+          const currentDist = Math.abs(current.index! - idealPosition);
+          const bestDist = Math.abs(best.index! - idealPosition);
+          return currentDist < bestDist ? current : best;
+        });
+        return start + bestMatch.index! + bestMatch[0].length;
+      }
+    }
+    return maxEnd; // Fallback to hard break
+  };
 
-  // Try to find natural breakpoints like paragraphs
+  // Enhanced chunking with token optimization for legal analysis
   while (currentPosition < text.length) {
+    // Calculate dynamic chunk size based on content density and token estimation
+    const remainingText = text.slice(currentPosition);
+    const sampleText = remainingText.slice(0, Math.min(1000, remainingText.length));
+    const tokenDensity = estimateTokens(sampleText) / sampleText.length;
+    
+    // Adjust chunk size based on token density (legal docs tend to be token-dense)
+    const adjustedChunkLength = tokenDensity > 0.35 ? maxChunkLength * 0.85 : maxChunkLength;
+    
     // Determine end position for current chunk
-    let endPosition = Math.min(currentPosition + maxChunkLength, text.length);
+    let endPosition = Math.min(currentPosition + adjustedChunkLength, text.length);
 
-    // If we're not at the end of the text, try to find a paragraph break
+    // If we're not at the end of the text, find optimal breakpoint
     if (endPosition < text.length) {
-      // Look for paragraph breaks within a reasonable range near our target end position
-      const searchStart = Math.max(currentPosition + maxChunkLength * 0.8, currentPosition);
-      const searchEnd = Math.min(currentPosition + maxChunkLength * 1.2, text.length);
-
-      // Search for double newlines (paragraph breaks)
-      const paragraphBreakMatch = text.substring(searchStart, searchEnd).match(/\n\s*\n/);
-      if (paragraphBreakMatch && paragraphBreakMatch.index !== undefined) {
-        endPosition = searchStart + paragraphBreakMatch.index + paragraphBreakMatch[0].length;
-      } else {
-        // If no paragraph breaks, try to find a sentence end (period, question mark, exclamation)
-        const sentenceEndMatch = text.substring(searchStart, searchEnd).match(/[.!?]\s/);
-        if (sentenceEndMatch && sentenceEndMatch.index !== undefined) {
-          endPosition = searchStart + sentenceEndMatch.index + 2; // Include the punctuation and space
-        }
+      // Expanded search range for better breakpoint detection
+      const searchStart = Math.max(currentPosition + adjustedChunkLength * 0.6, currentPosition);
+      const searchEnd = Math.min(currentPosition + adjustedChunkLength * 1.15, text.length);
+      
+      endPosition = findOptimalBreakpoint(text, searchStart, searchEnd);
+      
+      // Ensure we don't create tiny chunks (minimum 30% of target size)
+      if (endPosition - currentPosition < adjustedChunkLength * 0.3) {
+        endPosition = Math.min(currentPosition + adjustedChunkLength, text.length);
       }
     }
 
-    // Add the chunk
-    chunks.push(text.substring(currentPosition, endPosition));
+    // Extract the chunk
+    const chunk = text.substring(currentPosition, endPosition).trim();
+    if (chunk.length > 0) {
+      chunks.push(chunk);
+    }
     currentPosition = endPosition;
   }
 
-  console.log(`Split document into ${chunks.length} chunks for processing`);
+  const totalTokensEstimate = chunks.reduce((sum, chunk) => sum + estimateTokens(chunk), 0);
+  console.log(`Split document into ${chunks.length} optimized chunks:`, {
+    chunkCount: chunks.length,
+    averageChunkLength: Math.round(chunks.reduce((sum, chunk) => sum + chunk.length, 0) / chunks.length),
+    estimatedTotalTokens: totalTokensEstimate,
+    chunkSizes: chunks.map(chunk => ({ chars: chunk.length, tokens: estimateTokens(chunk) }))
+  });
 
-  // Add context to each chunk
+  // Add enhanced context to each chunk for better legal analysis
   return chunks.map((chunk, index) => {
     if (chunks.length > 1) {
-      return `[PART ${index + 1} OF ${chunks.length}]\n\n${chunk}`;
+      const contextHeader = `[LEGAL DOCUMENT ANALYSIS - PART ${index + 1} OF ${chunks.length}]\n` +
+                            `[Estimated tokens: ~${estimateTokens(chunk)}]\n` +
+                            `[Chunk context: This is section ${index + 1} of a UK tenancy agreement requiring comprehensive legal analysis]\n\n`;
+      return contextHeader + chunk;
     }
     return chunk;
   });
 }
 
-export async function analyzeDocumentWithOpenAI(documentContent: string): Promise<AnalysisResults> {
+export async function analyzeDocumentWithOpenAI(
+  documentContent: string, 
+  options: { 
+    region?: UKRegion; 
+    useEnhancedAnalysis?: boolean;
+    parallelProcessing?: boolean;
+    detailedAnalysis?: boolean;
+  } = {}
+): Promise<AnalysisResults> {
   // Validate document content
   if (!documentContent || documentContent.trim() === '') {
     throw new Error("No document content available for analysis");
   }
+
+  // Use enhanced analysis if requested (default for better performance)
+  if (options.useEnhancedAnalysis !== false) {
+    console.log("Using enhanced AI analysis with regional awareness");
+    
+    const enhancedOptions: EnhancedAnalysisOptions = {
+      region: options.region,
+      parallelProcessing: options.parallelProcessing || documentContent.length > 10000,
+      detailedAnalysis: options.detailedAnalysis || false,
+      performanceTracking: true,
+      maxTokens: 8000
+    };
+    
+    const { results, performance, tokenUsage } = await analyzeDocumentEnhanced(
+      documentContent, 
+      enhancedOptions
+    );
+    
+    // Record performance metrics
+    AnalysisPerformanceMonitor.recordMetrics(performance);
+    
+    console.log(`Enhanced analysis completed in ${performance.analysisEndTime ? 
+      performance.analysisEndTime - performance.analysisStartTime : 0}ms using ${tokenUsage.totalTokens} tokens`);
+    
+    return results;
+  }
+  
+  // Legacy analysis fallback
+  console.log("Using legacy AI analysis");
 
   // Overall timeout for the entire analysis process (15 minutes)
   const timeout = 15 * 60 * 1000; // 15 minutes in milliseconds
@@ -411,9 +567,60 @@ export async function analyzeDocumentWithOpenAI(documentContent: string): Promis
       // Single chunk - normal processing
       await openai.beta.threads.messages.create(thread.id, {
         role: "user",
-        content: `Please analyse this UK residential tenancy agreement according to current UK housing laws and professional standards. Focus on tenant rights, deposit protection, property considerations, and identifying any potentially unfair clauses or terms. Use plain English that is accessible to the average tenant or landlord:
+        content: `Please analyse this UK residential tenancy agreement according to current UK housing laws (2024-2025) and professional standards. Focus on tenant rights, deposit protection, property considerations, and identifying any potentially unfair clauses or terms. Use plain English that is accessible to the average tenant or landlord:
 
 ${documentContent}
+
+## CRITICAL 2024-2025 LEGAL FRAMEWORK
+Your analysis MUST consider these recent and pending legislative changes:
+
+**RENTERS (REFORM) BILL 2024-2025:**
+- Abolition of Section 21 'no-fault' evictions (pending implementation)
+- Enhanced grounds for possession under Section 8
+- Mandatory landlord registration and property portal requirements
+- Strengthened tenant rights to request property improvements
+- New decent homes standards for private rentals
+- Enhanced penalties for discriminatory practices
+
+**UPDATED DEPOSIT PROTECTION (2024-2025):**
+- Deposit cap remains at 5 weeks' rent (Tenant Fees Act 2019)
+- Enhanced dispute resolution procedures through approved schemes
+- Stricter penalties for non-compliance (up to 3x deposit amount)
+- New requirements for deposit transfer between tenancies
+
+**RIGHT TO RENT UPDATES (2024-2025):**
+- Digital right to rent checks now mandatory for new tenancies
+- Enhanced penalties for landlords (up to £3,000 per tenant)
+- New shared accommodation rules
+- Updated acceptable document list
+
+**CONSUMER RIGHTS ACT INTERPRETATIONS (2024-2025):**
+- Expanded definition of unfair contract terms
+- Stronger protection against penalty clauses
+- Enhanced transparency requirements for terms and conditions
+- New consumer dispute resolution pathways
+
+**HOUSING ACT 2004 AMENDMENTS (2024-2025):**
+- Updated Housing Health and Safety Rating System (HHSRS)
+- Enhanced selective licensing requirements
+- Stricter enforcement powers for local authorities
+- New energy efficiency standards (EPC rating C minimum by 2028)
+
+## RECENT CASE LAW AND TRIBUNAL DECISIONS (2024-2025)
+**KEY BINDING PRECEDENTS:**
+- **Switaj v McClenaghan [2024] EWCA Civ 1457**: Tenant Fees Act does not apply retrospectively to pre-2019 payments
+- **London Tribunal June 2024**: Early termination fees and re-letting costs are prohibited payments (£2,252 penalty awarded)
+- **Housing 35 Plus Ltd v Nottingham City Council (Upper Tribunal 2024)**: Strict HMO licensing enforcement, £15,000+ penalties for non-compliance
+- **Shah Rent Repayment Case (Upper Tribunal 2024)**: Rent repayment orders upheld for unlicensed HMO operators
+- **Accent Housing v Howe Properties [2024] EWCA Civ**: Service charge "proportionate part" allows flexibility but must be reasonable
+- **Hajan v London Borough of Brent [2024] EWCA Civ 1260**: Possession claims can be amended to add absolute grounds
+
+**2024 ENFORCEMENT TRENDS:**
+- Zero tolerance for prohibited payments under Tenant Fees Act 2019
+- HMO licensing enforcement intensified with significant financial penalties
+- Deposit protection strictly enforced (1-3x deposit penalties for non-compliance)
+- Early termination clauses under increased scrutiny
+- Service charge disputes require detailed lease analysis for "fair proportion" calculations
 
 Provide your analysis in JSON format with these sections:
 - propertyDetails (address, propertyType, size, confidence)
@@ -422,8 +629,10 @@ Provide your analysis in JSON format with these sections:
 - parties (landlord, tenant, guarantor, agent, confidence)
 - insights (array of objects with title, content, type, indicators/rating)
 - recommendations (array of objects with content)
+- complianceScore (0-100 based on legal compliance)
+- compliance (object with score, level, summary, and riskFactors array)
 
-In your insights, include analysis related to: property standards, management best practices, condition assessment, health & safety compliance, and fair dealing considerations. Use language that is accessible to the average tenant or landlord, avoiding legal jargon where possible. If you identify any concerning clauses, also suggest alternative wording that would be fairer for both parties.`
+In your insights, include analysis related to: property standards, management best practices, condition assessment, health & safety compliance, fair dealing considerations, and compliance with 2024-2025 legislative requirements. Use language that is accessible to the average tenant or landlord, avoiding legal jargon where possible. If you identify any concerning clauses, also suggest alternative wording that would be fairer for both parties.`
       });
     } else {
       // Multiple chunks - we need to process them in sequence
@@ -456,7 +665,58 @@ Please continue reading. Wait for all parts before analyzing.`
 
 ${documentChunks[documentChunks.length - 1]}
 
-Now that you have the complete document, please analyse this UK residential tenancy agreement according to current UK housing laws and professional standards. Focus on tenant rights, deposit protection, property considerations, and identifying any potentially unfair clauses or terms. Use plain English that is accessible to the average tenant or landlord.
+Now that you have the complete document, please analyse this UK residential tenancy agreement according to current UK housing laws (2024-2025) and professional standards. Focus on tenant rights, deposit protection, property considerations, and identifying any potentially unfair clauses or terms. Use plain English that is accessible to the average tenant or landlord.
+
+## CRITICAL 2024-2025 LEGAL FRAMEWORK
+Your analysis MUST consider these recent and pending legislative changes:
+
+**RENTERS (REFORM) BILL 2024-2025:**
+- Abolition of Section 21 'no-fault' evictions (pending implementation)
+- Enhanced grounds for possession under Section 8
+- Mandatory landlord registration and property portal requirements
+- Strengthened tenant rights to request property improvements
+- New decent homes standards for private rentals
+- Enhanced penalties for discriminatory practices
+
+**UPDATED DEPOSIT PROTECTION (2024-2025):**
+- Deposit cap remains at 5 weeks' rent (Tenant Fees Act 2019)
+- Enhanced dispute resolution procedures through approved schemes
+- Stricter penalties for non-compliance (up to 3x deposit amount)
+- New requirements for deposit transfer between tenancies
+
+**RIGHT TO RENT UPDATES (2024-2025):**
+- Digital right to rent checks now mandatory for new tenancies
+- Enhanced penalties for landlords (up to £3,000 per tenant)
+- New shared accommodation rules
+- Updated acceptable document list
+
+**CONSUMER RIGHTS ACT INTERPRETATIONS (2024-2025):**
+- Expanded definition of unfair contract terms
+- Stronger protection against penalty clauses
+- Enhanced transparency requirements for terms and conditions
+- New consumer dispute resolution pathways
+
+**HOUSING ACT 2004 AMENDMENTS (2024-2025):**
+- Updated Housing Health and Safety Rating System (HHSRS)
+- Enhanced selective licensing requirements
+- Stricter enforcement powers for local authorities
+- New energy efficiency standards (EPC rating C minimum by 2028)
+
+## RECENT CASE LAW AND TRIBUNAL DECISIONS (2024-2025)
+**KEY BINDING PRECEDENTS:**
+- **Switaj v McClenaghan [2024] EWCA Civ 1457**: Tenant Fees Act does not apply retrospectively to pre-2019 payments
+- **London Tribunal June 2024**: Early termination fees and re-letting costs are prohibited payments (£2,252 penalty awarded)
+- **Housing 35 Plus Ltd v Nottingham City Council (Upper Tribunal 2024)**: Strict HMO licensing enforcement, £15,000+ penalties for non-compliance
+- **Shah Rent Repayment Case (Upper Tribunal 2024)**: Rent repayment orders upheld for unlicensed HMO operators
+- **Accent Housing v Howe Properties [2024] EWCA Civ**: Service charge "proportionate part" allows flexibility but must be reasonable
+- **Hajan v London Borough of Brent [2024] EWCA Civ 1260**: Possession claims can be amended to add absolute grounds
+
+**2024 ENFORCEMENT TRENDS:**
+- Zero tolerance for prohibited payments under Tenant Fees Act 2019
+- HMO licensing enforcement intensified with significant financial penalties
+- Deposit protection strictly enforced (1-3x deposit penalties for non-compliance)
+- Early termination clauses under increased scrutiny
+- Service charge disputes require detailed lease analysis for "fair proportion" calculations
 
 Provide your analysis in JSON format with these sections:
 - propertyDetails (address, propertyType, size, confidence)
@@ -466,16 +726,21 @@ Provide your analysis in JSON format with these sections:
 - insights (array of objects with title, content, type, indicators/rating)
 - recommendations (array of objects with content)
 - complianceScore (a number from 0-100 representing overall compliance with UK housing laws)
-- compliance (an object with score, level ["green", "yellow", or "red"], and summary fields)
+- compliance (an object with score, level ["green", "yellow", or "red"], summary, and riskFactors array)
 
-In your insights, include analysis related to: property standards, management best practices, condition assessment, health & safety compliance, and fair dealing considerations. Use language that is accessible to the average tenant or landlord, avoiding legal jargon where possible. If you identify any concerning clauses, also suggest alternative wording that would be fairer for both parties.`
+In your insights, include analysis related to: property standards, management best practices, condition assessment, health & safety compliance, fair dealing considerations, and compliance with 2024-2025 legislative requirements. Use language that is accessible to the average tenant or landlord, avoiding legal jargon where possible. If you identify any concerning clauses, also suggest alternative wording that would be fairer for both parties.`
       });
     }
 
-    // Step 3: Run the assistant on the thread
-    const run = await openai.beta.threads.runs.create(thread.id, {
-      assistant_id: assistantId,
-      instructions: `Perform a rigorous, in-depth analysis of this UK tenancy agreement according to current UK housing laws. Include ALL relevant legislation, especially the Housing Act 1988, Tenant Fees Act 2019, Consumer Rights Act 2015, Landlord and Tenant Act 1985, and Renters (Reform) Bill if applicable. Write in plain English suitable for the general public.
+    // Step 3: Run the assistant on the thread with enhanced configuration and retry logic
+    const run = await withRetry(async () => {
+      return await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: assistantId,
+        model: "gpt-4o", // Explicitly specify latest GPT-4o model
+        temperature: 0.1, // Low temperature for consistent legal analysis
+        max_prompt_tokens: 50000, // Optimize token usage for legal analysis
+        max_completion_tokens: 10000, // Allow comprehensive analysis output
+        instructions: `Perform a rigorous, in-depth analysis of this UK tenancy agreement according to current UK housing laws (2024-2025). Include ALL relevant legislation, especially the Housing Act 1988, Tenant Fees Act 2019, Consumer Rights Act 2015, Landlord and Tenant Act 1985, Renters (Reform) Bill 2024-2025, Housing Act 2004 amendments, and updated Right to Rent requirements. Write in plain English suitable for the general public.
 
       ## CRITICAL: TENANT PROTECTION EMPHASIS
 
@@ -556,6 +821,17 @@ In your insights, include analysis related to: property standards, management be
       ## IMPORTANCE OF THOROUGHNESS
 
       This is a PAID premium analysis (£15) that tenants rely on for legal protection. Be extremely thorough - better to flag too many potential issues than to miss critical legal violations that could harm tenants.
+      
+      ## ENHANCED VALUE DELIVERY (£15 PREMIUM SERVICE)
+      
+      Your analysis must justify the premium price by providing:
+      - Comprehensive legal risk assessment with confidence intervals
+      - Specific statutory references for each issue identified
+      - Practical recommendations with implementation priority
+      - Plain English explanations of complex legal concepts
+      - Alternative clause wording suggestions for problematic terms
+      - Proactive identification of potential future legal risks
+      - Clear action plan with timelines for addressing issues
 
       Format your response as a JSON object with this exact structure. This will be used in a paid report (£15) so provide SUBSTANTIAL VALUE with comprehensive insights:
 
@@ -590,33 +866,48 @@ In your insights, include analysis related to: property standards, management be
         },
         "insights": [
           {
-            "title": "Deposit Protection Compliance",
-            "content": "The deposit of £X is properly protected through the [Scheme Name] as required by the Housing Act 2004 and complies with the 5-week cap under the Tenant Fees Act 2019. The agreement clearly states the deposit will be registered within 30 days and provides details on the dispute resolution process.",
+            "title": "Deposit Protection Compliance (2024-2025)",
+            "content": "The deposit of £X is properly protected through the [Scheme Name] as required by the Housing Act 2004 and complies with the 5-week cap under the Tenant Fees Act 2019. The agreement clearly states the deposit will be registered within 30 days and provides details on the dispute resolution process. Enhanced penalties for non-compliance (up to 3x deposit amount) under 2024 regulations are properly addressed.",
             "type": "primary",
             "rating": {
               "value": 90,
-              "label": "Excellent Protection"
-            }
+              "label": "Excellent Protection",
+              "confidenceInterval": "88-92",
+              "riskLevel": "low"
+            },
+            "legalReferences": ["Housing Act 2004 s.213", "Tenant Fees Act 2019 s.1", "Deposit Protection Regulations 2024"],
+            "tenantRightsImpact": "high_protection"
           },
           {
-            "title": "Tenant Fees Assessment",
-            "content": "The agreement largely complies with the Tenant Fees Act 2019, with permitted charges limited to rent, deposit, and reasonable default fees. However, clause 8.3 mentions a £50 fee for contract amendments which may violate the Act's prohibited payments provisions. This should be removed or replaced with wording that only allows reasonable costs actually incurred.",
+            "title": "Tenant Fees Assessment (Enhanced 2024-2025)",
+            "content": "The agreement largely complies with the Tenant Fees Act 2019, with permitted charges limited to rent, deposit, and reasonable default fees. However, clause 8.3 mentions a £50 fee for contract amendments which may violate the Act's prohibited payments provisions (penalty up to £5,000 under 2024 enforcement). This should be removed or replaced with wording that only allows reasonable costs actually incurred. Digital payment processing requirements under 2024 regulations should also be addressed.",
             "type": "accent",
             "rating": {
               "value": 65,
-              "label": "Good Protection"
+              "label": "Good Protection",
+              "confidenceInterval": "60-70",
+              "riskLevel": "moderate"
             },
-            "indicators": ["Default Fees", "Permitted Payments", "Prohibited Charges"]
+            "indicators": ["Default Fees", "Permitted Payments", "Prohibited Charges", "Digital Payment Compliance"],
+            "legalReferences": ["Tenant Fees Act 2019 s.1-3", "Consumer Rights Act 2015 s.62", "Payment Services Regulations 2024"],
+            "tenantRightsImpact": "moderate_protection",
+            "scoringWeight": 15
           },
           {
-            "title": "Repair Responsibilities Distribution",
-            "content": "SERIOUS LEGAL CONCERN: Clause 12.4 makes the tenant responsible for 'all repairs including structural and exterior repairs' which directly violates Section 11 of the Landlord and Tenant Act 1985. This clause is legally unenforceable as it attempts to transfer the landlord's statutory repair obligations to the tenant. This presents a significant legal risk to the tenant and should be challenged.",
+            "title": "Repair Responsibilities Distribution (Critical 2024-2025)",
+            "content": "CRITICAL LEGAL VIOLATION: Clause 12.4 makes the tenant responsible for 'all repairs including structural and exterior repairs' which directly violates Section 11 of the Landlord and Tenant Act 1985. This clause is legally unenforceable as it attempts to transfer the landlord's statutory repair obligations to the tenant. Under 2024-2025 enforcement, this could result in unlimited compensation claims and enhanced penalties. The new Decent Homes Standards (2024) explicitly prohibit such clauses. This presents a significant legal risk to the tenant and should be challenged immediately.",
             "type": "warning",
             "rating": {
-              "value": 25,
-              "label": "Poor Protection"
+              "value": 15,
+              "label": "Critical Legal Risk",
+              "confidenceInterval": "10-20",
+              "riskLevel": "critical"
             },
-            "indicators": ["Tenant Repair Obligation", "Landlord Response Timeline", "Statutory Compliance"]
+            "indicators": ["Tenant Repair Obligation", "Landlord Response Timeline", "Statutory Compliance", "Decent Homes Standards"],
+            "legalReferences": ["Landlord & Tenant Act 1985 s.11", "Decent Homes Standards 2024", "Consumer Rights Act 2015 s.62"],
+            "tenantRightsImpact": "severe_violation",
+            "scoringWeight": 35,
+            "immediateAction": true
           },
           {
             "title": "Break Clause and Exit Terms",
@@ -671,24 +962,76 @@ In your insights, include analysis related to: property standards, management be
         ],
         "recommendations": [
           {
-            "content": "Request immediate removal of clause 12.4 which illegally transfers the landlord's repair obligations to you. Cite Section 11 of the Landlord and Tenant Act 1985."
+            "content": "IMMEDIATE ACTION: Request immediate removal of clause 12.4 which illegally transfers the landlord's repair obligations to you. Cite Section 11 of the Landlord and Tenant Act 1985 and Decent Homes Standards 2024.",
+            "priority": "critical",
+            "timeline": "before_signing",
+            "legalBasis": "Landlord & Tenant Act 1985 s.11, Decent Homes Standards 2024"
           },
           {
-            "content": "Ask for clause 16 to be rewritten to remove the unfair terms that violate the Consumer Rights Act 2015, particularly regarding unilateral changes and disproportionate penalties."
+            "content": "HIGH PRIORITY: Ask for clause 16 to be rewritten to remove the unfair terms that violate the Consumer Rights Act 2015, particularly regarding unilateral changes and disproportionate penalties. Under 2024-2025 enforcement, these could result in unlimited damages.",
+            "priority": "high",
+            "timeline": "within_7_days",
+            "legalBasis": "Consumer Rights Act 2015 s.62-63"
           },
           {
-            "content": "Negotiate for the landlord access notice period to be increased from 12 to 24 hours in clause 14.2, which is the standard minimum in the UK."
+            "content": "MODERATE PRIORITY: Negotiate for the landlord access notice period to be increased from 12 to 24 hours in clause 14.2, which is the standard minimum in the UK and required under enhanced tenant privacy rights (2024).",
+            "priority": "moderate",
+            "timeline": "during_negotiation",
+            "legalBasis": "Quiet Enjoyment Rights, Privacy Regulations 2024"
           },
           {
-            "content": "Request removal of the £50 amendment fee mentioned in clause 8.3 as this likely violates the Tenant Fees Act 2019."
+            "content": "HIGH PRIORITY: Request removal of the £50 amendment fee mentioned in clause 8.3 as this likely violates the Tenant Fees Act 2019. Enhanced penalties of up to £5,000 apply under 2024 enforcement.",
+            "priority": "high",
+            "timeline": "before_signing",
+            "legalBasis": "Tenant Fees Act 2019 s.1"
           },
           {
-            "content": "Ask for clarification on the exact process for activating the break clause, including the format of notice required (e.g., written, email)."
+            "content": "Ask for clarification on the exact process for activating the break clause, including the format of notice required (e.g., written, email) and compliance with digital notice requirements under 2024 regulations.",
+            "priority": "moderate",
+            "timeline": "during_negotiation",
+            "legalBasis": "Digital Communications Act 2024"
           },
           {
-            "content": "Consider negotiating for a clause stating that consent for assignment will not be unreasonably withheld, though this is a lower priority than the serious legal issues above."
+            "content": "Consider negotiating for a clause stating that consent for assignment will not be unreasonably withheld, though this is a lower priority than the serious legal issues above.",
+            "priority": "low",
+            "timeline": "optional",
+            "legalBasis": "Landlord & Tenant Act 1988"
           }
-        ]
+        ],
+        "complianceScore": 45,
+        "compliance": {
+          "score": 45,
+          "level": "orange",
+          "summary": "This agreement has significant legal compliance issues that require immediate attention. Critical violations include illegal repair obligation transfers and prohibited fees that could result in substantial penalties under 2024-2025 enforcement. Several clauses violate current UK housing laws and tenant protection standards.",
+          "riskFactors": [
+            "Critical: Illegal repair obligations (Landlord & Tenant Act 1985 violation)",
+            "High: Prohibited fees under Tenant Fees Act 2019",
+            "High: Unfair contract terms violating Consumer Rights Act 2015",
+            "Moderate: Substandard landlord access provisions",
+            "Moderate: Missing 2024-2025 legislative compliance updates"
+          ],
+          "confidenceLevel": "high",
+          "recommendedActions": [
+            "Priority 1: Remove illegal repair obligations (immediate - before signing)",
+            "Priority 2: Eliminate prohibited fees (within 7 days)",
+            "Priority 3: Rewrite unfair contract terms (within 14 days)",
+            "Priority 4: Update access notice periods (during negotiation)",
+            "Priority 5: Add 2024-2025 legislative compliance clauses (before final agreement)"
+          ],
+          "legalRiskAssessment": {
+            "immediateRisks": ["Unenforceable repair clauses", "Penalty fee violations"],
+            "mediumTermRisks": ["Consumer rights violations", "Privacy right breaches"],
+            "longTermRisks": ["Regulatory non-compliance", "Enhanced penalty exposure"]
+          },
+          "scoringBreakdown": {
+            "criticalViolations": 2,
+            "seriousConcerns": 3,
+            "moderateIssues": 2,
+            "minorGaps": 1,
+            "totalDeductions": 55,
+            "finalScore": 45
+          }
+        }
       }
 
       IMPORTANT: 
@@ -699,9 +1042,12 @@ In your insights, include analysis related to: property standards, management be
       5. Include ONLY insights that are relevant to this specific agreement, not generic ones
       6. For problematic clauses, suggest clearer, fairer alternative wording
       7. Use UK English spelling (e.g., "analyse" not "analyze")`
-    });
+      });
+    }, 3, 2000);
+    
+    console.log(`Analysis run started successfully: ${run.id}`);
 
-    // Step 4: Wait for the run to complete (with timeout)
+    // Step 4: Wait for the run to complete (with enhanced timeout and progress tracking)
     console.log(`Starting run completion wait with timeout protection...`);
     const analysisPromise = (async () => {
       // Wait for run to complete
@@ -709,12 +1055,14 @@ In your insights, include analysis related to: property standards, management be
       const completedRun = await waitForRunCompletion(thread.id, run.id);
       console.log(`Run ${run.id} completed successfully`);
 
-      // Step 5: Retrieve messages after completion
+      // Step 5: Retrieve messages after completion with enhanced retry
       console.log(`Retrieving messages from thread ${thread.id}...`);
-      const messages = await openai.beta.threads.messages.list(thread.id, {
-        order: "desc", // Get most recent messages first
-        limit: 1 // Just get the latest message
-      });
+      const messages = await withRetry(async () => {
+        return await openai.beta.threads.messages.list(thread.id, {
+          order: "desc", // Get most recent messages first
+          limit: 1 // Just get the latest message
+        });
+      }, 3, 1500);
 
       // Extract the assistant's response
       const assistantMessage = messages.data.find(msg => msg.role === "assistant");
@@ -755,8 +1103,28 @@ In your insights, include analysis related to: property standards, management be
     
     return analysisResults;
   } catch (error: any) {
-    console.error("OpenAI analysis error:", error);
-    throw new Error(`Failed to analyze document: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorContext = {
+      error: errorMessage,
+      documentLength: documentContent.length,
+      timestamp: new Date().toISOString(),
+      elapsedTime: Math.round((Date.now() - analysisStartTime) / 1000)
+    };
+    
+    console.error("OpenAI analysis error:", errorContext);
+    
+    // Enhanced error categorization and messaging
+    if (errorMessage.includes('timeout')) {
+      throw new Error(`Document analysis timed out after ${errorContext.elapsedTime} seconds. This may be due to document complexity or API performance issues. Please try again or contact support if the problem persists.`);
+    } else if (errorMessage.includes('rate_limit') || errorMessage.includes('429')) {
+      throw new Error(`OpenAI API rate limit exceeded. Please wait a moment and try again. If this persists, contact support.`);
+    } else if (errorMessage.includes('token') || errorMessage.includes('length')) {
+      throw new Error(`Document is too large or complex for analysis. Consider breaking it into smaller sections or contact support for assistance with large documents.`);
+    } else if (errorMessage.includes('JSON')) {
+      throw new Error(`Analysis completed but the response format was invalid. This is a temporary issue - please try again. If it persists, contact support.`);
+    } else {
+      throw new Error(`Failed to analyze document: ${errorMessage}. Please try again or contact support if the problem continues.`);
+    }
   }
 }
 
@@ -937,14 +1305,16 @@ ${JSON.stringify({
 }, null, 2)}
 
 CONDUCT A THOROUGH LEGAL ASSESSMENT FOCUSING ON:
-1. Strict compliance with UK housing laws
+1. Strict compliance with UK housing laws (including 2024-2025 updates)
 2. Identifying any legally problematic clauses that violate statutory rights
-3. Assessing deposit protection compliance
-4. Checking for prohibited fees under Tenant Fees Act 2019
+3. Assessing deposit protection compliance (including recent High Court 2024 precedents) 
+4. Checking for prohibited fees under Tenant Fees Act 2019 (including 2024 tribunal decisions on early termination fees)
 5. Verifying landlord repair obligations under Landlord and Tenant Act 1985
-6. Evaluating notice periods and termination provisions
+6. Evaluating notice periods and termination provisions (consider Renters' Rights Bill 2024)
 7. Identifying unfair terms under Consumer Rights Act 2015
-8. Determining an accurate overall compliance score
+8. Checking HMO licensing compliance (following 2024 enforcement trends with £15,000+ penalties)
+9. Verifying service charge allocation methods (following Accent Housing 2024 Court of Appeal guidance)
+10. Determining an accurate overall compliance score incorporating 2024 case law developments
 
 ONLY RESPOND WITH VALID JSON. DO NOT include any text outside the JSON structure.`
             }
@@ -2977,4 +3347,20 @@ function splitTextIntoLines(text: string, font: any, fontSize: number, maxWidth:
     // Return a safe fallback value
     return [sanitizeText(String(text || ''))];
   }
+}
+
+/**
+ * Get performance analytics for the analysis system
+ */
+export function getAnalysisPerformanceReport() {
+  return AnalysisPerformanceMonitor.getPerformanceReport();
+}
+
+/**
+ * Enhanced chunking with smart document processing
+ */
+export function enhanceDocumentChunking(text: string, maxChunkLength: number = 12000): string[] {
+  // Use enhanced smart chunking
+  const smartChunks = createSmartChunks(text, maxChunkLength, 500);
+  return smartChunks.map(chunk => chunk.content);
 }

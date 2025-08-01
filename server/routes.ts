@@ -3,11 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import { processDocument } from "./document-processor";
-import { analyzeDocumentWithOpenAI, generateTenancyAgreementRewrite } from "./openai";
+import { analyzeDocumentWithOpenAI, generateTenancyAgreementRewrite, getAnalysisPerformanceReport } from "./openai";
 import { generateSimplePdfReport } from './pdf-generator-new';
 import { saveEncryptedFile, readEncryptedFile, reEncryptFile } from "./encryption";
 import { extractClauses, detectClauseType, getPromptForClauseType } from './clause-extractor';
-import { preScreenDocumentForLegalIssues, checkUKTenancyCompliance } from './uk-tenancy-laws';
+import { preScreenDocumentForLegalIssues, checkUKTenancyCompliance, UKRegion } from './uk-tenancy-laws';
+import { performanceDashboardRoutes } from './performance-dashboard';
 
 import { z } from "zod";
 import { insertDocumentSchema } from "@shared/schema";
@@ -1154,7 +1155,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get primary analysis with OpenAI - use enhanced content with annotations
-      const analysisResults = await analyzeDocumentWithOpenAI(enhancedContent);
+      // Enhanced analysis is enabled by default with regional awareness
+      const analysisResults = await analyzeDocumentWithOpenAI(enhancedContent, {
+        useEnhancedAnalysis: true,
+        parallelProcessing: true, // Enable for better performance
+        detailedAnalysis: false   // Standard analysis level
+      });
       console.log("Primary AI analysis completed successfully");
       
       // Combine the AI results with our extract clauses and pre-screening insights
@@ -3917,6 +3923,60 @@ This message was sent from the contact form on the RentRight AI website.
     } catch (error: any) {
       console.error('Dashboard API error:', error);
       res.status(500).json({ error: 'Failed to fetch dashboard data' });
+    }
+  });
+
+  // Performance Dashboard Routes
+  app.get('/api/admin/performance/dashboard', requireAdmin, async (req, res) => {
+    try {
+      const dashboardData = performanceDashboardRoutes.getDashboardData();
+      res.json(dashboardData);
+    } catch (error: any) {
+      console.error('Performance dashboard API error:', error);
+      res.status(500).json({ error: 'Failed to fetch performance dashboard data' });
+    }
+  });
+
+  app.get('/api/admin/performance/status', requireAdmin, async (req, res) => {
+    try {
+      const status = performanceDashboardRoutes.getRealTimeStatus();
+      res.json(status);
+    } catch (error: any) {
+      console.error('Performance status API error:', error);
+      res.status(500).json({ error: 'Failed to fetch performance status' });
+    }
+  });
+
+  app.get('/api/admin/performance/export', requireAdmin, async (req, res) => {
+    try {
+      const exportData = performanceDashboardRoutes.exportData();
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="rentright-performance-${new Date().toISOString().split('T')[0]}.json"`);
+      res.json(exportData);
+    } catch (error: any) {
+      console.error('Performance export API error:', error);
+      res.status(500).json({ error: 'Failed to export performance data' });
+    }
+  });
+
+  app.post('/api/admin/performance/reset', requireAdmin, async (req, res) => {
+    try {
+      const result = performanceDashboardRoutes.resetData();
+      res.json(result);
+    } catch (error: any) {
+      console.error('Performance reset API error:', error);
+      res.status(500).json({ error: 'Failed to reset performance data' });
+    }
+  });
+
+  // Legacy performance route for backwards compatibility
+  app.get('/api/admin/analysis-performance', requireAdmin, async (req, res) => {
+    try {
+      const performanceReport = getAnalysisPerformanceReport();
+      res.json(performanceReport);
+    } catch (error: any) {
+      console.error('Analysis performance API error:', error);
+      res.status(500).json({ error: 'Failed to fetch analysis performance data' });
     }
   });
 
