@@ -221,6 +221,8 @@ async function performOptimizedAnalysis(
   const content = response.choices[0].message.content || '{}';
   let analysisResults: AnalysisResults;
   
+  console.log('🚨 ENHANCED-ANALYSIS - RAW OPENAI RESPONSE:', content.substring(0, 500));
+  
   try {
     analysisResults = JSON.parse(content);
     
@@ -229,7 +231,8 @@ async function performOptimizedAnalysis(
       hasInsights: !!analysisResults.insights,
       insightsCount: analysisResults.insights ? analysisResults.insights.length : 0,
       resultKeys: Object.keys(analysisResults),
-      firstInsight: analysisResults.insights?.[0]
+      firstInsight: analysisResults.insights?.[0],
+      rawContentPreview: content.substring(0, 200)
     });
     
     // Enhance with pre-screening insights

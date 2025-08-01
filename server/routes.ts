@@ -1156,19 +1156,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get primary analysis with OpenAI - use enhanced content with annotations
       // Enhanced analysis is enabled by default with regional awareness
+      console.log('🚨🚨🚨 ROUTES - STARTING OPENAI ANALYSIS FOR DOCUMENT:', document.id);
+      
       const analysisResults = await analyzeDocumentWithOpenAI(enhancedContent, {
         useEnhancedAnalysis: true,
         parallelProcessing: true, // Enable for better performance
         detailedAnalysis: false   // Standard analysis level
       });
-      console.log("Primary AI analysis completed successfully");
+      console.log("🚨🚨🚨 ROUTES - Primary AI analysis completed successfully");
       
       // CRITICAL DEBUG: Log analysis results received from OpenAI
-      console.log('🔍 ROUTES DEBUG - Analysis results from analyzeDocumentWithOpenAI:', {
+      console.log('🔍🔍🔍 ROUTES DEBUG - Analysis results from analyzeDocumentWithOpenAI:', {
         hasInsights: !!analysisResults.insights,
         insightsCount: analysisResults.insights ? analysisResults.insights.length : 0,
         resultsKeys: Object.keys(analysisResults),
-        firstInsight: analysisResults.insights?.[0]
+        firstInsight: analysisResults.insights?.[0],
+        fullResultsPreview: JSON.stringify(analysisResults).substring(0, 300)
       });
       
       // Combine the AI results with our extract clauses and pre-screening insights
