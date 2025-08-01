@@ -147,6 +147,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  console.log('🚀 REGISTERING ROUTES - Starting route registration...');
+  
   // Configure server for handling concurrent requests without authentication
   app.set('trust proxy', 1);
   
@@ -726,6 +728,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     apiLimiter, 
     speedLimiter,
     async (req, res) => {
+    console.log('🚨🚨🚨 ANALYZE ENDPOINT HIT! 🚨🚨🚨');
+    console.log('Request params:', req.params);
+    console.log('Request body:', req.body);
+    console.log('Request method:', req.method);
+    console.log('Request path:', req.path);
+    console.log('Request URL:', req.url);
+    
     try {
       const id = parseInt(req.params.id);
       const { paymentIntentId, serviceType, customerEmail } = req.body;
@@ -1464,6 +1473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: error.message || 'Error analyzing document' });
     }
   });
+  
+  console.log('✅ ANALYZE ROUTE REGISTERED: POST /api/documents/:id/analyze');
 
   // Get analysis for a document
   app.get('/api/documents/:id/analysis', async (req, res) => {
@@ -4082,5 +4093,13 @@ This message was sent from the contact form on the RentRight AI website.
   });
 
   const httpServer = createServer(app);
+  
+  console.log('🎯 ROUTE REGISTRATION COMPLETE - All routes have been registered');
+  console.log('📋 Key routes registered:');
+  console.log('  - POST /api/documents/:id/analyze (CRITICAL FOR PAYMENT FLOW)');
+  console.log('  - GET /api/documents/:id/analysis');
+  console.log('  - POST /api/create-payment-intent');
+  console.log('  - POST /api/stripe-webhook');
+  
   return httpServer;
 }
