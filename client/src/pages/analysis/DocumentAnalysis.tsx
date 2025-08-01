@@ -21,7 +21,8 @@ import {
   LucideFileCheck,
   LucideSearchX,
   LucideSearch,
-  LucideFileWarning
+  LucideFileWarning,
+  Download
 } from 'lucide-react';
 
 export default function DocumentAnalysis() {
@@ -82,6 +83,8 @@ export default function DocumentAnalysis() {
     const email = url.searchParams.get('email');
     
     if (paymentIntent && paymentIntentStatus === 'succeeded') {
+      console.log('Processing payment success redirect:', { paymentIntent, serviceType, email });
+      
       const serviceMessage = serviceType === 'combined' 
         ? "Your payment was successful. Starting premium analysis with tenancy agreement rewrite..."
         : "Your payment was successful. Starting premium analysis...";
@@ -93,18 +96,32 @@ export default function DocumentAnalysis() {
       });
       
       // Clean up the URL immediately to prevent duplicate processing
-      const cleanUrl = location.split('?')[0];
+      const cleanUrl = window.location.pathname;
       window.history.replaceState({}, 'RentRight AI - Document Analysis', cleanUrl);
       
-      // Add a small delay to ensure state changes have propagated
+      // Add a delay to ensure URL cleanup and state changes have propagated
       const timer = setTimeout(() => {
+        console.log('Triggering paid analysis with:', { paymentIntent, serviceType, email });
         // Trigger analysis with payment intent and service type
         performPaidAnalysis(paymentIntent, serviceType || undefined, email || undefined);
-      }, 100);
+      }, 500);
       
       return () => clearTimeout(timer);
     }
   }, [location, performPaidAnalysis, toast]);
+
+  // Auto-redirect to report view when analysis is complete
+  useEffect(() => {
+    if ((isAnalysisComplete || isFullAnalysisComplete) && analysis && !isAnalyzing) {
+      console.log('Analysis complete, redirecting to report view...');
+      // Small delay to show the success message briefly before redirecting
+      const timer = setTimeout(() => {
+        setLocation(`/analysis/${documentId}/report`);
+      }, 2000); // 2 second delay to show success message
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isAnalysisComplete, isFullAnalysisComplete, analysis, isAnalyzing, documentId, setLocation]);
 
   // No loading state - document should be ready when we arrive here from processing
 
@@ -195,31 +212,24 @@ export default function DocumentAnalysis() {
   // Analysis display or start analysis prompt
   // Handle payment completion
   const handlePaymentComplete = (success: boolean, serviceType: string, email?: string) => {
+    setIsPaymentModalOpen(false);
+    
     if (success) {
+      console.log('Payment completed successfully:', { serviceType, email });
+      
       toast({
         title: "Payment Successful",
         description: "Your premium analysis is being generated.",
         className: "bg-green-50 border-green-200 text-green-800",
       });
       
-      // Simulate a redirect back with the payment intent
-      // In real flow, Stripe would redirect with these params
-      const url = new URL(window.location.href);
+      // Generate a simulated payment intent for testing
+      // In production, this would come from Stripe
       const paymentIntent = "pi_simulated_" + Date.now();
-      url.searchParams.set('payment_intent', paymentIntent);
-      url.searchParams.set('redirect_status', 'succeeded');
-      url.searchParams.set('service_type', serviceType);
       
-      // Add the email to URL params for consistency
-      if (email) {
-        url.searchParams.set('email', email);
-        console.log(`Setting email param: ${email}`);
-      }
-      
-      // Start the paid analysis with the simulated payment intent and email
+      // Start the paid analysis immediately
       performPaidAnalysis(paymentIntent, serviceType, email);
     }
-    setIsPaymentModalOpen(false);
   };
   
   return (
@@ -237,12 +247,55 @@ export default function DocumentAnalysis() {
               handlePaymentComplete(true, serviceType, email);
             }}
           />
-          {isAnalysisComplete && analysis ? (
-            (() => {
-              // Automatically redirect to report view
-              setTimeout(() => setLocation(`/analysis/${documentId}/report`), 100);
-              return <div>Redirecting to report...</div>;
-            })()
+          {(isAnalysisComplete || isFullAnalysisComplete) && analysis ? (
+            <div className="min-h-screen bg-gradient-to-b from-[#FFFAF5] to-white flex items-center justify-center">
+              <div className="max-w-md mx-auto text-center p-8">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center"
+                >
+                  <Check className="w-10 h-10 text-green-600" />
+                </motion.div>
+
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                  {analysis.isPaid ? 'Premium Analysis Complete!' : 'Analysis Complete!'}
+                </h1>
+                
+                <p className="text-gray-600 mb-8">
+                  Your tenancy agreement has been analyzed. View your detailed report below.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+                  <Button
+                    onClick={() => setLocation(`/analysis/${documentId}/report`)}
+                    className="bg-[#EC7134] hover:bg-[#DC6327] text-white font-medium px-6 py-3"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    View Full Report
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => generateReport(analysis.isPaid)}
+                    className="border-[#EC7134] text-[#EC7134] hover:bg-[#EC7134] hover:text-white font-medium px-6 py-3"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </Button>
+                </div>
+
+                {/* Show analysis results inline */}
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <AnalysisPanel
+                    analysis={analysis}
+                    isPaidAnalysis={analysis.isPaid}
+                    isPreviewMode={false}
+                    onGenerateReport={(isPaid, paymentIntentId) => generateReport(isPaid, paymentIntentId)}
+                  />
+                </div>
+              </div>
+            </div>
           ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

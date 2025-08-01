@@ -102,47 +102,75 @@ export default function LeaseRewritePaymentModal({ isOpen, onClose, onSuccess, d
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-w-[95vw] bg-white rounded-2xl shadow-xl border-0 max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-center mb-1 text-[#333]">
-            Add Lease Rewrite
-          </DialogTitle>
-          <DialogDescription className="text-center">
-            <span className="block font-medium text-[#EC7134] text-lg mb-1">{price}</span>
-            <span className="text-gray-600">Generate a tenant-friendly version of your lease</span>
-          </DialogDescription>
+          <div className="bg-brand-gradient -mx-6 -mt-6 px-6 py-6 rounded-t-2xl mb-6 shadow-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-white/5 bg-[size:20px_20px] opacity-30" style={{backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)'}}></div>
+            <div className="relative z-10 text-center">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <path d="M14 2v6h6"/>
+                  <path d="M16 13H8"/>
+                  <path d="M16 17H8"/>
+                  <path d="M10 9H8"/>
+                </svg>
+              </div>
+              <DialogTitle className="text-xl text-white font-semibold mb-2">
+                Add Lease Rewrite
+              </DialogTitle>
+              <DialogDescription className="text-white/90 text-sm">
+                <span className="block font-semibold text-lg mb-1">{price}</span>
+                <span>Generate a tenant-friendly version of your lease</span>
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         
-        <div className="mt-2">
+        <div className="px-6 pb-6">
           {/* What you'll get section */}
-          <div className="bg-[#FFFAF5] rounded-lg p-4 mb-4 border border-[#F3D5C0]">
-            <h4 className="font-semibold text-[#D55D20] mb-2">What You'll Get:</h4>
-            <ul className="space-y-2 text-gray-700">
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#EC7134] mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>Complete rewritten tenancy agreement with all essential terms</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#EC7134] mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>Clearer, fairer terms with stronger tenant protections</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#EC7134] mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>Downloadable in Word or PDF format</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-[#EC7134] mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>Ready to propose to your landlord as an alternative</span>
-              </li>
-            </ul>
+          <div className="bg-subtle-gradient rounded-xl p-5 mb-6 border border-[#F3D5C0] shadow-sm">
+            <h4 className="font-semibold text-gray-800 mb-4 text-base flex items-center">
+              <svg className="w-5 h-5 text-[#EC7134] mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 12l2 2 4-4"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+              What You'll Get:
+            </h4>
+            <div className="grid gap-4">
+              <div className="flex items-start">
+                <div className="w-6 h-6 bg-[#EC7134]/10 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <svg className="w-4 h-4 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="text-sm text-gray-700 leading-relaxed">Complete rewritten tenancy agreement with all essential terms</span>
+              </div>
+              <div className="flex items-start">
+                <div className="w-6 h-6 bg-[#EC7134]/10 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <svg className="w-4 h-4 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="text-sm text-gray-700 leading-relaxed">Clearer, fairer terms with stronger tenant protections</span>
+              </div>
+              <div className="flex items-start">
+                <div className="w-6 h-6 bg-[#EC7134]/10 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <svg className="w-4 h-4 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="text-sm text-gray-700 leading-relaxed">Downloadable in Word or PDF format</span>
+              </div>
+              <div className="flex items-start">
+                <div className="w-6 h-6 bg-[#EC7134]/10 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <svg className="w-4 h-4 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="text-sm text-gray-700 leading-relaxed">Ready to propose to your landlord as an alternative</span>
+              </div>
+            </div>
           </div>
 
           {clientSecret ? (
@@ -168,40 +196,53 @@ export default function LeaseRewritePaymentModal({ isOpen, onClose, onSuccess, d
                   }}
                   className="space-y-4"
                 >
-                  <div className="bg-white rounded-lg p-4 border border-[#F3EEE4] shadow-sm">
-                    <Label htmlFor="lease-rewrite-email" className="text-sm font-medium text-gray-700 mb-1 block">
+                  <div className="payment-section rounded-xl p-5 shadow-sm">
+                    <Label htmlFor="lease-rewrite-email" className="text-sm font-semibold text-gray-800 mb-2 block">
                       Email Address <span className="text-red-500">*</span>
                     </Label>
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-xs text-gray-600 mb-3">
                       We'll send your lease rewrite and receipt to this email
                     </p>
                     <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
                       <Input 
                         id="lease-rewrite-email"
                         type="email" 
                         value={paymentEmail} 
                         onChange={(e) => setPaymentEmail(e.target.value)} 
                         onBlur={validatePaymentEmail}
-                        placeholder="your@email.com"
-                        className={`w-full ${paymentEmailError ? 'border-red-300 focus:border-red-500' : ''}`}
+                        placeholder="your.email@example.com"
+                        className={`pl-12 h-11 ${paymentEmailError ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-[#EC7134] focus:ring-[#EC7134]/20'} rounded-lg transition-all duration-200`}
                       />
                       {paymentEmailError && (
-                        <p className="text-red-500 text-xs mt-1">{paymentEmailError}</p>
+                        <div className="flex items-center mt-2 text-red-600">
+                          <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                          </svg>
+                          <p className="text-xs">{paymentEmailError}</p>
+                        </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex justify-end gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3 mt-8">
                     <Button 
                       variant="outline" 
                       onClick={onClose} 
-                      className="w-1/2 border-gray-300 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                      className="flex-1 h-12 font-medium"
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit"
-                      className="w-1/2 bg-gradient-to-r from-[#EC7134] to-[#E35F1E] hover:from-[#E35F1E] hover:to-[#D55D20] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                      className="flex-1 h-12 font-semibold"
+                      size="lg"
                     >
                       <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
@@ -214,14 +255,14 @@ export default function LeaseRewritePaymentModal({ isOpen, onClose, onSuccess, d
             </div>
           )}
           
-          <div className="mt-5 pt-4 border-t border-gray-100 text-xs text-gray-500">
-            <p className="flex items-center justify-center">
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-center text-xs text-gray-500">
               <svg className="w-4 h-4 mr-2 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              Secure payment processed by Stripe
-            </p>
+              <span>Secure payment powered by Stripe</span>
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -307,41 +348,60 @@ const CheckoutForm = ({
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-white p-4 rounded-lg border border-[#F3EEE4] shadow-sm">
-        <PaymentElement />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-3 mt-6">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCancel}
-          disabled={isProcessing}
-          className="border-gray-300 hover:bg-gray-50 rounded-lg transition-all duration-200"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={!stripe || isProcessing} 
-          className="bg-gradient-to-r from-[#EC7134] to-[#E35F1E] hover:from-[#E35F1E] hover:to-[#D55D20] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          {isProcessing ? (
-            <div className="flex items-center">
-              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-              Processing...
-            </div>
-          ) : (
-            <>
-              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-9.618 5.04L3 8a9 9 0 009 9 9 9 0 009-9l-.382-.014z" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Pay {price}
-            </>
-          )}
-        </Button>
-      </div>
-    </form>
+    <div className="animate-fade-in-up">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="payment-section rounded-xl p-5 shadow-sm">
+          <div className="mb-3">
+            <h4 className="text-sm font-semibold text-gray-800 mb-1">Payment Information</h4>
+            <p className="text-xs text-gray-600">Your payment is secured with 256-bit SSL encryption</p>
+          </div>
+          <PaymentElement 
+            options={{
+              layout: 'tabs'
+            }}
+          />
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 mt-8">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isProcessing}
+            className="flex-1 h-12 font-medium"
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={!stripe || isProcessing}
+            loading={isProcessing}
+            loadingText="Processing..."
+            className="flex-1 h-12 font-semibold"
+            size="lg"
+          >
+            {!isProcessing && (
+              <>
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M9 12l2 2 4-4"/>
+                </svg>
+                Pay {price}
+              </>
+            )}
+          </Button>
+        </div>
+        
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-center text-xs text-gray-500">
+            <svg className="w-4 h-4 mr-2 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span>Secure payment powered by Stripe</span>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };

@@ -9,33 +9,49 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   return (
-    <header className="bg-white sticky top-0 z-50 shadow-sm">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+    <header className="bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-100">
+      <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <Link href="/">
-          <div className="flex items-center cursor-pointer">
+          <div className="flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-200">
             <Logo size="lg" textColor="text-gray-800" />
           </div>
         </Link>
         
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="hidden lg:flex items-center space-x-8">
           <Link href="/">
-            <div className={`text-sm font-medium transition-colors ${location === '/' ? 'text-[#EC7134]' : 'text-gray-700 hover:text-[#EC7134]'}`}>
+            <div className={`text-sm font-medium transition-all duration-200 hover:scale-105 px-3 py-2 rounded-lg ${
+              location === '/' 
+                ? 'text-[#EC7134] bg-[#EC7134]/5' 
+                : 'text-gray-700 hover:text-[#EC7134] hover:bg-gray-50'
+            }`}>
               Solutions
             </div>
           </Link>
           <Link href="/tenant-rights">
-            <div className={`text-sm font-medium transition-colors ${location === '/tenant-rights' ? 'text-[#EC7134]' : 'text-gray-700 hover:text-[#EC7134]'}`}>
+            <div className={`text-sm font-medium transition-all duration-200 hover:scale-105 px-3 py-2 rounded-lg ${
+              location === '/tenant-rights' 
+                ? 'text-[#EC7134] bg-[#EC7134]/5' 
+                : 'text-gray-700 hover:text-[#EC7134] hover:bg-gray-50'
+            }`}>
               Tenant Rights
             </div>
           </Link>
           <Link href="/about">
-            <div className={`text-sm font-medium transition-colors ${location === '/about' ? 'text-[#EC7134]' : 'text-gray-700 hover:text-[#EC7134]'}`}>
+            <div className={`text-sm font-medium transition-all duration-200 hover:scale-105 px-3 py-2 rounded-lg ${
+              location === '/about' 
+                ? 'text-[#EC7134] bg-[#EC7134]/5' 
+                : 'text-gray-700 hover:text-[#EC7134] hover:bg-gray-50'
+            }`}>
               About us
             </div>
           </Link>
           <Link href="/contact">
-            <div className={`text-sm font-medium transition-colors ${location === '/contact' ? 'text-[#EC7134]' : 'text-gray-700 hover:text-[#EC7134]'}`}>
+            <div className={`text-sm font-medium transition-all duration-200 hover:scale-105 px-3 py-2 rounded-lg ${
+              location === '/contact' 
+                ? 'text-[#EC7134] bg-[#EC7134]/5'
+                : 'text-gray-700 hover:text-[#EC7134] hover:bg-gray-50'
+            }`}>
               Contact
             </div>
           </Link>
@@ -45,16 +61,18 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {/* Mobile Menu Toggle */}
           <button 
-            className="md:hidden rounded-full bg-[#FBF8F2] p-2 text-[#EC7134] border border-[#F3EEE4] hover:bg-[#F3EEE4] transition-colors"
+            className="lg:hidden rounded-xl bg-[#FBF8F2] p-3 text-[#EC7134] border border-[#F3EEE4] hover:bg-[#F3EEE4] transition-all duration-200 hover:scale-105 active:scale-95 focus:ring-2 focus:ring-[#EC7134]/20"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle mobile menu"
           >
             <Menu className="h-5 w-5" />
           </button>
           
           {/* Get Started Button (Desktop Only) */}
-          <Link href="/" className="hidden md:block">
+          <Link href="/" className="hidden lg:block">
             <Button 
-              className="bg-[#EC7134] hover:bg-[#E35F1E] text-white font-medium rounded-xl shadow-sm"
+              size="lg"
+              className="font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
               onClick={(e) => {
                 e.preventDefault();
                 const uploadSection = document.getElementById('upload-section');
@@ -65,56 +83,82 @@ export default function Header() {
                 }
               }}
             >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
               Start Analyzing
             </Button>
           </Link>
         </div>
       </div>
       
-      {/* Mobile Menu */}
+      {/* Enhanced Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-[#F3EEE4] py-4">
-          <div className="container mx-auto px-4 space-y-3">
+        <div className="lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-100 animate-fade-in-up">
+          <div className="container mx-auto px-4 sm:px-6 py-6 space-y-2">
             <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-              <div className={`flex items-center justify-between py-2 px-3 rounded-lg ${location === '/' ? 'bg-[#FBF8F2] text-[#EC7134]' : 'text-gray-700'}`}>
+              <div className={`flex items-center justify-between py-4 px-4 rounded-xl transition-all duration-200 ${
+                location === '/' 
+                  ? 'bg-[#EC7134]/10 text-[#EC7134] border border-[#EC7134]/20' 
+                  : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+              }`}>
                 <span className="font-medium">Solutions</span>
                 <ChevronRight className="h-4 w-4" />
               </div>
             </Link>
             <Link href="/tenant-rights" onClick={() => setMobileMenuOpen(false)}>
-              <div className={`flex items-center justify-between py-2 px-3 rounded-lg ${location === '/tenant-rights' ? 'bg-[#FBF8F2] text-[#EC7134]' : 'text-gray-700'}`}>
+              <div className={`flex items-center justify-between py-4 px-4 rounded-xl transition-all duration-200 ${
+                location === '/tenant-rights' 
+                  ? 'bg-[#EC7134]/10 text-[#EC7134] border border-[#EC7134]/20' 
+                  : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+              }`}>
                 <span className="font-medium">Tenant Rights</span>
                 <ChevronRight className="h-4 w-4" />
               </div>
             </Link>
             <Link href="/about" onClick={() => setMobileMenuOpen(false)}>
-              <div className={`flex items-center justify-between py-2 px-3 rounded-lg ${location === '/about' ? 'bg-[#FBF8F2] text-[#EC7134]' : 'text-gray-700'}`}>
+              <div className={`flex items-center justify-between py-4 px-4 rounded-xl transition-all duration-200 ${
+                location === '/about' 
+                  ? 'bg-[#EC7134]/10 text-[#EC7134] border border-[#EC7134]/20' 
+                  : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+              }`}>
                 <span className="font-medium">About us</span>
                 <ChevronRight className="h-4 w-4" />
               </div>
             </Link>
             <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
-              <div className={`flex items-center justify-between py-2 px-3 rounded-lg ${location === '/contact' ? 'bg-[#FBF8F2] text-[#EC7134]' : 'text-gray-700'}`}>
+              <div className={`flex items-center justify-between py-4 px-4 rounded-xl transition-all duration-200 ${
+                location === '/contact' 
+                  ? 'bg-[#EC7134]/10 text-[#EC7134] border border-[#EC7134]/20' 
+                  : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+              }`}>
                 <span className="font-medium">Contact</span>
                 <ChevronRight className="h-4 w-4" />
               </div>
             </Link>
-            <Link href="/" onClick={() => {
-              setMobileMenuOpen(false);
-              // Add slight delay to ensure mobile menu closes first
-              setTimeout(() => {
-                const uploadSection = document.getElementById('upload-section');
-                if (uploadSection) {
-                  uploadSection.scrollIntoView({ behavior: 'smooth' });
-                }
-              }, 100);
-            }}>
-              <Button 
-                className="w-full mt-2 bg-[#EC7134] hover:bg-[#E35F1E] text-white font-medium rounded-xl"
-              >
-                Start Analyzing
-              </Button>
-            </Link>
+            
+            <div className="pt-4 border-t border-gray-100 mt-4">
+              <Link href="/" onClick={() => {
+                setMobileMenuOpen(false);
+                // Add slight delay to ensure mobile menu closes first
+                setTimeout(() => {
+                  const uploadSection = document.getElementById('upload-section');
+                  if (uploadSection) {
+                    uploadSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }}>
+                <Button 
+                  size="lg"
+                  className="w-full font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                  Start Analyzing
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       )}

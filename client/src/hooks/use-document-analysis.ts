@@ -49,15 +49,26 @@ export function useDocumentAnalysis(documentId: number) {
       );
       return apiRequest("POST", `/api/documents/${documentId}/analyze`, validParams);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      console.log('Analysis mutation successful, updating state...');
+      
       // Update the progress to 100% when the analysis is complete
       setProgress(100);
       
-      // Set analyzing to false to remove loading screen
-      setIsAnalyzing(false);
+      // Invalidate and refetch the analysis data immediately
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/analysis`] });
       
-      // Invalidate the cached analysis data to fetch the new one
-      queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/analysis`] });
+      // Also invalidate the document query to ensure fresh data
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}`] });
+      
+      // Force refetch of analysis to ensure we have the latest data immediately
+      await refetchAnalysis();
+      
+      // Small delay to ensure the new data is loaded before removing loading screen
+      setTimeout(() => {
+        setIsAnalyzing(false);
+        console.log('Analysis complete, loading screen removed');
+      }, 1500); // Slightly longer delay to ensure data is available
       
       toast({
         title: "Analysis Complete",
@@ -66,12 +77,14 @@ export function useDocumentAnalysis(documentId: number) {
       });
     },
     onError: (error) => {
+      console.error('Analysis mutation failed:', error);
       // Reset the analyzing state
       setIsAnalyzing(false);
+      setProgress(0);
       
       toast({
         title: "Analysis Failed",
-        description: error.message || "There was a problem with your analysis.",
+        description: error.message || "There was a problem with your analysis. Please try again.",
         variant: "destructive",
       });
     },
@@ -169,6 +182,8 @@ export function useDocumentAnalysis(documentId: number) {
 
   // Start the full analysis after payment
   const performPaidAnalysis = (paymentIntentId: string, serviceType?: string, email?: string) => {
+    console.log('Starting paid analysis with:', { paymentIntentId, serviceType, email });
+    
     // Set analyzing state to true immediately so we show loading screen with premium messaging
     setIsAnalyzing(true);
     setProgress(10); // Start with some progress already
@@ -205,7 +220,7 @@ export function useDocumentAnalysis(documentId: number) {
       
       console.log('Sending analysis request with params:', JSON.stringify(params));
       fullAnalysisMutation.mutate(params);
-    }, 500);
+    }, 1000); // Increased delay to ensure UI is ready
   };
 
   // Type assertion to handle isPaid property
@@ -216,8 +231,8 @@ export function useDocumentAnalysis(documentId: number) {
     document: document as Document | null,
     analysis: typedAnalysis,
     isLoading: isDocumentLoading || isAnalysisLoading,
-    isAnalysisComplete: !!typedAnalysis,
-    isFullAnalysisComplete: !!typedAnalysis && typedAnalysis.isPaid === true,
+    isAnalysisComplete: !!typedAnalysis && !isAnalyzing && !!typedAnalysis.results,
+    isFullAnalysisComplete: !!typedAnalysis && typedAnalysis.isPaid === true && !isAnalyzing && !!typedAnalysis.results,
     isAnalyzing,
     progress,
     performPaidAnalysis,

@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import CaptchaInput from '@/components/ui/captcha-input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Check } from 'lucide-react';
+import { Check, AlertCircle, Upload, FileText } from 'lucide-react';
 
 interface DocumentUploaderProps {
   onUploadStart: () => void;
@@ -19,11 +19,22 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaAnswer, setCaptchaAnswer] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const uploadFile = async () => {
-    if (!file) return;
+    if (!file) {
+      toast({
+        title: 'No file selected',
+        description: 'Please select a file to upload.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     setIsUploading(true);
+    setUploadError(null);
+    setUploadProgress(0);
     onUploadStart();
 
     try {
@@ -82,25 +93,66 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
       onUploadComplete(data.id);
     } catch (error: any) {
       console.error("Upload error:", error);
+      const errorMessage = error.message || 'There was a problem uploading your document.';
+      setUploadError(errorMessage);
       toast({
         title: 'Upload failed',
-        description: error.message || 'There was a problem uploading your document.',
+        description: errorMessage,
         variant: 'destructive'
       });
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[], rejectedFiles: any[]) => {
+    // Clear any previous errors
+    setUploadError(null);
+    
+    // Handle rejected files
+    if (rejectedFiles.length > 0) {
+      const rejection = rejectedFiles[0];
+      let errorMessage = 'File upload failed.';
+      
+      if (rejection.errors.some((e: any) => e.code === 'file-too-large')) {
+        errorMessage = 'File is too large. Maximum size is 10MB.';
+      } else if (rejection.errors.some((e: any) => e.code === 'file-invalid-type')) {
+        errorMessage = 'Invalid file type. Please upload a PDF, DOC, or DOCX file.';
+      }
+      
+      setUploadError(errorMessage);
+      toast({
+        title: 'File rejected',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     if (acceptedFiles.length === 0) return;
     
     const selectedFile = acceptedFiles[0];
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     
+    // Double-check file type
     if (!allowedTypes.includes(selectedFile.type)) {
+      const errorMessage = 'Please upload a PDF, DOC, or DOCX file.';
+      setUploadError(errorMessage);
       toast({
         title: 'Invalid file type',
-        description: 'Please upload a PDF, DOC, or DOCX file.',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Check file size (10MB limit)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      const errorMessage = 'File is too large. Maximum size is 10MB.';
+      setUploadError(errorMessage);
+      toast({
+        title: 'File too large',
+        description: errorMessage,
         variant: 'destructive'
       });
       return;
@@ -228,7 +280,7 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
     });
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
@@ -236,7 +288,12 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
     },
     maxFiles: 1,
-    disabled: isUploading
+    maxSize: 10 * 1024 * 1024, // 10MB
+    disabled: isUploading,
+    onError: (error) => {
+      console.error('Dropzone error:', error);
+      setUploadError('An error occurred with file selection.');
+    }
   });
 
   return (
@@ -244,10 +301,16 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
       <div 
         {...getRootProps()} 
         className={`relative border-2 border-dashed rounded-xl p-8 md:p-10 mb-6 transition-all duration-300 cursor-pointer overflow-hidden ${
-          isDragActive 
-            ? 'border-[#EC7134] bg-[#FBF8F2] scale-[1.02] shadow-xl' 
-            : 'border-gray-300 hover:border-[#EC7134]/70 hover:shadow-lg hover:scale-[1.01] bg-white'
-        } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''} ${file ? 'border-green-400 bg-green-50' : ''}`}
+          isDragReject
+            ? 'border-red-400 bg-red-50 scale-[1.02]'
+            : isDragActive 
+              ? 'border-[#EC7134] bg-[#FBF8F2] scale-[1.02] shadow-xl' 
+              : uploadError
+                ? 'border-red-300 bg-red-50/50'
+                : file
+                  ? 'border-green-400 bg-green-50'
+                  : 'border-gray-300 hover:border-[#EC7134]/70 hover:shadow-lg hover:scale-[1.01] bg-white'
+        } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {/* Enhanced animated background elements */}
         <div className={`absolute inset-0 transition-opacity duration-300 ${isDragActive ? 'opacity-100' : 'opacity-0'}`}>
@@ -273,34 +336,78 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
         <input {...getInputProps()} />
         <div className="flex flex-col items-center relative z-10">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${
-            isDragActive ? 'bg-[#EC7134]/20 scale-110 shadow-lg shadow-[#EC7134]/30' : 'bg-[#FBF8F2] hover:bg-[#F3EEE4]'
+            isDragReject
+              ? 'bg-red-100 scale-110'
+              : isDragActive 
+                ? 'bg-[#EC7134]/20 scale-110 shadow-lg shadow-[#EC7134]/30' 
+                : uploadError
+                  ? 'bg-red-100'
+                  : file
+                    ? 'bg-green-100'
+                    : 'bg-[#FBF8F2] hover:bg-[#F3EEE4]'
           }`}>
-            <svg 
-              className={`w-8 h-8 text-[#EC7134] transition-all duration-300 ${isDragActive ? 'scale-110 animate-bounce' : ''}`} 
-              style={{ animationDuration: '1s' }}
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
+            {uploadError ? (
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            ) : file ? (
+              <Check className="w-8 h-8 text-green-600" />
+            ) : (
+              <Upload 
+                className={`w-8 h-8 text-[#EC7134] transition-all duration-300 ${
+                  isDragReject
+                    ? 'text-red-500'
+                    : isDragActive 
+                      ? 'scale-110 animate-bounce text-[#EC7134]' 
+                      : 'text-[#EC7134]'
+                }`} 
+                style={{ animationDuration: '1s' }}
+              />
+            )}
           </div>
           
           <h4 className={`font-semibold text-lg transition-colors duration-300 mb-2 ${
-            isDragActive ? 'text-[#EC7134]' : 'text-gray-700'
+            isDragReject
+              ? 'text-red-600'
+              : isDragActive 
+                ? 'text-[#EC7134]' 
+                : uploadError
+                  ? 'text-red-600'
+                  : file
+                    ? 'text-green-600'
+                    : 'text-gray-700'
           }`}>
-            {isDragActive ? 'Drop your document here' : 'Upload Your Tenancy Agreement'}
+            {isDragReject
+              ? 'Invalid file type'
+              : isDragActive 
+                ? 'Drop your document here' 
+                : uploadError
+                  ? 'Upload failed'
+                  : file
+                    ? 'File ready to upload'
+                    : 'Upload Your Tenancy Agreement'
+            }
           </h4>
           
           <p className={`text-sm transition-colors duration-300 mb-4 ${
-            isDragActive ? 'text-[#EC7134]/80' : 'text-gray-500'
+            isDragReject
+              ? 'text-red-500'
+              : isDragActive 
+                ? 'text-[#EC7134]/80' 
+                : uploadError
+                  ? 'text-red-500'
+                  : file
+                    ? 'text-green-600'
+                    : 'text-gray-500'
           }`}>
-            {isDragActive ? 'Release to upload' : 'Drag & drop or click to browse files'}
+            {isDragReject
+              ? 'Please upload a PDF, DOC, or DOCX file'
+              : isDragActive 
+                ? 'Release to upload' 
+                : uploadError
+                  ? uploadError
+                  : file
+                    ? `${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`
+                    : 'Drag & drop or click to browse files'
+            }
           </p>
           
           {/* File format guidance with better visual hierarchy */}
@@ -329,22 +436,39 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
           </div>
           
           <Button 
-            className={`bg-[#EC7134] hover:bg-[#E35F1E] text-white px-8 py-3 font-medium transition-all duration-300 shadow-sm rounded-xl ${
-              isDragActive ? 'shadow-[#EC7134]/30 scale-105' : ''
-            } ${file ? 'bg-green-600 hover:bg-green-700' : ''}`}
-            disabled={isUploading}
+            className={`px-8 py-3 font-medium transition-all duration-300 shadow-sm rounded-xl ${
+              uploadError
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : file
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : isDragActive
+                    ? 'bg-[#EC7134] hover:bg-[#E35F1E] text-white shadow-[#EC7134]/30 scale-105'
+                    : 'bg-[#EC7134] hover:bg-[#E35F1E] text-white'
+            }`}
+            disabled={isUploading || isDragReject}
+            onClick={uploadError ? () => { setUploadError(null); setFile(null); } : undefined}
           >
             {isUploading ? (
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 <span>Uploading...</span>
               </div>
+            ) : uploadError ? (
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>Try Again</span>
+              </div>
             ) : file ? (
               <div className="flex items-center space-x-2">
                 <Check className="w-4 h-4" />
                 <span>File Ready - Click to Continue</span>
               </div>
-            ) : 'Choose File'}
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Upload className="w-4 h-4" />
+                <span>Choose File</span>
+              </div>
+            )}
           </Button>
           
           {file && (
