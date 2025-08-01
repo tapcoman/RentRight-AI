@@ -1513,6 +1513,15 @@ ONLY RESPOND WITH VALID JSON. DO NOT include any text outside the JSON structure
         // Merge the validated results with the initial analysis
         const enhancedAnalysis = mergeAnalysisResults(initialAnalysis, validatedResults);
         
+        // CRITICAL DEBUG: Log insights after merge
+        console.log('🔍 CRITICAL DEBUG - After mergeAnalysisResults:', {
+          hasInsights: !!enhancedAnalysis.insights,
+          insightsCount: enhancedAnalysis.insights ? enhancedAnalysis.insights.length : 0,
+          initialInsightsCount: initialAnalysis.insights ? initialAnalysis.insights.length : 0,
+          validatedInsightsCount: validatedResults.insights ? validatedResults.insights.length : 0,
+          firstInsight: enhancedAnalysis.insights?.[0]
+        });
+        
         // Add any critical legal issues from the UK Law Assessment
         if (ukLawAssessment?.uk_housing_law_assessment?.primary_legal_issues) {
           // Extract high severity issues from the legal assessment
@@ -1527,6 +1536,11 @@ ONLY RESPOND WITH VALID JSON. DO NOT include any text outside the JSON structure
           
           if (criticalLegalIssues.length > 0) {
             // Add these issues to the insights if not already present
+            // CRITICAL FIX: Ensure enhancedAnalysis.insights exists before processing
+            if (!enhancedAnalysis.insights || !Array.isArray(enhancedAnalysis.insights)) {
+              enhancedAnalysis.insights = [];
+            }
+            
             const existingTitles = new Set(enhancedAnalysis.insights.map((i: any) => i.title.toLowerCase()));
             const newCriticalIssues = criticalLegalIssues.filter((issue: any) => 
               !existingTitles.has(issue.title.toLowerCase())
@@ -1539,6 +1553,15 @@ ONLY RESPOND WITH VALID JSON. DO NOT include any text outside the JSON structure
         }
         
         console.log("Secondary validation with UK housing law assessment completed successfully");
+        
+        // CRITICAL DEBUG: Log final insights before return
+        console.log('🔍 CRITICAL DEBUG - Final enhancedAnalysis before return:', {
+          hasInsights: !!enhancedAnalysis.insights,
+          insightsCount: enhancedAnalysis.insights ? enhancedAnalysis.insights.length : 0,
+          firstInsight: enhancedAnalysis.insights?.[0],
+          allInsightTitles: enhancedAnalysis.insights?.map(i => i.title) || []
+        });
+        
         // We have our results, no need to wait for the timeout
         return enhancedAnalysis;
         
@@ -1627,6 +1650,11 @@ function mergeAnalysisResults(initial: AnalysisResults, validated: AnalysisResul
   }
   
   // For insights, PRIORITIZE ASSISTANT FINDINGS and only add validation insights that are genuinely new
+  // CRITICAL FIX: Ensure initial.insights exists before processing
+  if (!initial.insights || !Array.isArray(initial.insights)) {
+    initial.insights = [];
+  }
+  
   if (validated.insights && Array.isArray(validated.insights)) {
     const existingTitles = new Set(initial.insights.map(insight => insight.title.toLowerCase()));
     
@@ -1673,6 +1701,11 @@ function mergeAnalysisResults(initial: AnalysisResults, validated: AnalysisResul
   }
   
   // For recommendations, add any new ones from validation
+  // CRITICAL FIX: Ensure initial.recommendations exists before processing
+  if (!initial.recommendations || !Array.isArray(initial.recommendations)) {
+    initial.recommendations = [];
+  }
+  
   if (validated.recommendations && Array.isArray(validated.recommendations)) {
     const existingRecommendations = new Set(
       initial.recommendations.map(rec => rec.content.toLowerCase())

@@ -224,9 +224,23 @@ async function performOptimizedAnalysis(
   try {
     analysisResults = JSON.parse(content);
     
+    // CRITICAL DEBUG: Log what was parsed from OpenAI
+    console.log('🔍 ENHANCED-ANALYSIS DEBUG - Parsed from OpenAI:', {
+      hasInsights: !!analysisResults.insights,
+      insightsCount: analysisResults.insights ? analysisResults.insights.length : 0,
+      resultKeys: Object.keys(analysisResults),
+      firstInsight: analysisResults.insights?.[0]
+    });
+    
     // Enhance with pre-screening insights
     if (analysisResults.insights && preScreenInsights.length > 0) {
       analysisResults.insights = [...preScreenInsights, ...analysisResults.insights];
+    } else if (preScreenInsights.length > 0) {
+      // CRITICAL FIX: If no insights from AI, use pre-screening insights
+      analysisResults.insights = preScreenInsights;
+    } else if (!analysisResults.insights) {
+      // CRITICAL FIX: Ensure insights array exists
+      analysisResults.insights = [];
     }
     
     // Add regional context
@@ -252,6 +266,13 @@ async function performOptimizedAnalysis(
   };
   
   console.log(`Analysis complete. Tokens used: ${tokenUsage.totalTokens} (estimated: ${estimatedTokens})`);
+  
+  // CRITICAL DEBUG: Log final results being returned
+  console.log('🔍 ENHANCED-ANALYSIS DEBUG - Final results being returned:', {
+    hasInsights: !!analysisResults.insights,
+    insightsCount: analysisResults.insights ? analysisResults.insights.length : 0,
+    allInsightTitles: analysisResults.insights?.map(i => i.title) || []
+  });
   
   return {
     results: analysisResults,

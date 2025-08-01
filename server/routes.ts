@@ -1163,6 +1163,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       console.log("Primary AI analysis completed successfully");
       
+      // CRITICAL DEBUG: Log analysis results received from OpenAI
+      console.log('🔍 ROUTES DEBUG - Analysis results from analyzeDocumentWithOpenAI:', {
+        hasInsights: !!analysisResults.insights,
+        insightsCount: analysisResults.insights ? analysisResults.insights.length : 0,
+        resultsKeys: Object.keys(analysisResults),
+        firstInsight: analysisResults.insights?.[0]
+      });
+      
       // Combine the AI results with our extract clauses and pre-screening insights
       const finalResults = {
         ...analysisResults,
