@@ -565,7 +565,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, documentId }:
                   }}
                   className="space-y-4"
                 >
-                  <div className="bg-white rounded-lg p-4 border border-[#F3EEE4] shadow-sm">
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
                     <Label htmlFor="init-email" className="text-sm font-medium text-gray-700 mb-1 block">
                       Email Address <span className="text-red-500">*</span>
                     </Label>

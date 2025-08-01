@@ -61,7 +61,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {/* Mobile Menu Toggle */}
           <button 
-            className="lg:hidden rounded-xl bg-[#FBF8F2] p-3 text-[#EC7134] border border-[#F3EEE4] hover:bg-[#F3EEE4] transition-all duration-200 hover:scale-105 active:scale-95 focus:ring-2 focus:ring-[#EC7134]/20"
+            className="lg:hidden rounded-xl bg-slate-50 p-3 text-[#EC7134] border border-slate-200 hover:bg-slate-100 transition-all duration-200 hover:scale-105 active:scale-95 focus:ring-2 focus:ring-[#EC7134]/20"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >

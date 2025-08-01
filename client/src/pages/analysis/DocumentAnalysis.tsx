@@ -66,13 +66,20 @@ export default function DocumentAnalysis() {
       documentId,
       hasDocument: !!document,
       hasAnalysis: !!analysis,
+      analysisId: analysis?.id,
+      analysisIsPaid: analysis?.isPaid,
+      hasAnalysisResults: !!analysis?.results,
       isLoading,
       isAnalysisComplete,
       isFullAnalysisComplete,
-
+      isAnalyzing,
       hasAnalysisError: !!analysisError,
     });
-  }, [documentId, document, analysis, isLoading, isAnalysisComplete, isFullAnalysisComplete, analysisError]);
+    
+    if (analysis?.results) {
+      console.log('Analysis results preview:', analysis.results);
+    }
+  }, [documentId, document, analysis, isLoading, isAnalysisComplete, isFullAnalysisComplete, isAnalyzing, analysisError]);
   
   // Handle payment success from Stripe redirect
   useEffect(() => {
@@ -110,18 +117,7 @@ export default function DocumentAnalysis() {
     }
   }, [location, performPaidAnalysis, toast]);
 
-  // Auto-redirect to report view when analysis is complete
-  useEffect(() => {
-    if ((isAnalysisComplete || isFullAnalysisComplete) && analysis && !isAnalyzing) {
-      console.log('Analysis complete, redirecting to report view...');
-      // Small delay to show the success message briefly before redirecting
-      const timer = setTimeout(() => {
-        setLocation(`/analysis/${documentId}/report`);
-      }, 2000); // 2 second delay to show success message
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isAnalysisComplete, isFullAnalysisComplete, analysis, isAnalyzing, documentId, setLocation]);
+  // Remove auto-redirect - let users manually navigate to report view
 
   // No loading state - document should be ready when we arrive here from processing
 
@@ -138,7 +134,7 @@ export default function DocumentAnalysis() {
   // Error state for document not found
   if (documentError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#FFFAF5] to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
         <div className="max-w-md mx-auto text-center p-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
             <AlertCircle className="w-8 h-8 text-red-600" />
@@ -165,7 +161,7 @@ export default function DocumentAnalysis() {
     
   if (analysisError && !isLoading && !is404Error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#FFFAF5] to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
         <div className="max-w-md mx-auto text-center p-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
             <AlertCircle className="w-8 h-8 text-red-600" />
@@ -233,7 +229,7 @@ export default function DocumentAnalysis() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFFAF5] to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <div className="max-w-5xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full">
           {/* Payment Modal */}
@@ -248,26 +244,29 @@ export default function DocumentAnalysis() {
             }}
           />
           {(isAnalysisComplete || isFullAnalysisComplete) && analysis ? (
-            <div className="min-h-screen bg-gradient-to-b from-[#FFFAF5] to-white flex items-center justify-center">
-              <div className="max-w-md mx-auto text-center p-8">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center"
-                >
-                  <Check className="w-10 h-10 text-green-600" />
-                </motion.div>
+            <div className="space-y-8">
+              {/* Success Banner */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6"
+              >
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                    <Check className="w-8 h-8 text-green-600" />
+                  </div>
+                  <div className="text-center">
+                    <h1 className="text-2xl font-bold text-green-800 mb-2">
+                      {analysis.isPaid ? 'Premium Analysis Complete!' : 'Analysis Complete!'}
+                    </h1>
+                    <p className="text-green-700">
+                      Your tenancy agreement has been analyzed. Review the results below.
+                    </p>
+                  </div>
+                </div>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                  {analysis.isPaid ? 'Premium Analysis Complete!' : 'Analysis Complete!'}
-                </h1>
-                
-                <p className="text-gray-600 mb-8">
-                  Your tenancy agreement has been analyzed. View your detailed report below.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button
                     onClick={() => setLocation(`/analysis/${documentId}/report`)}
                     className="bg-[#EC7134] hover:bg-[#DC6327] text-white font-medium px-6 py-3"
@@ -284,24 +283,22 @@ export default function DocumentAnalysis() {
                     Download PDF
                   </Button>
                 </div>
+              </motion.div>
 
-                {/* Show analysis results inline */}
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                  <AnalysisPanel
-                    analysis={analysis}
-                    isPaidAnalysis={analysis.isPaid}
-                    isPreviewMode={false}
-                    onGenerateReport={(isPaid, paymentIntentId) => generateReport(isPaid, paymentIntentId)}
-                  />
-                </div>
-              </div>
+              {/* Analysis Results */}
+              <AnalysisPanel
+                analysis={analysis}
+                isPaidAnalysis={analysis.isPaid}
+                isPreviewMode={false}
+                onGenerateReport={(isPaid, paymentIntentId) => generateReport(isPaid, paymentIntentId)}
+              />
             </div>
           ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-[#F3EEE4] overflow-hidden"
+              className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
             >
               {/* Document preview header with gradient */}
               <div className="bg-gradient-to-r from-[#EC7134] to-[#E35F1E] text-white p-6 sm:p-8">
@@ -366,7 +363,7 @@ export default function DocumentAnalysis() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: 0.1 }}
-                      className="bg-gradient-to-br from-[#FFF5EB] to-[#FFEBD7] border-2 border-[#EC7134] rounded-xl p-6 relative shadow-md"
+                      className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-[#EC7134] rounded-xl p-6 relative shadow-md"
                     >
                       <div className="absolute top-0 right-0 bg-[#EC7134] text-white rounded-bl-xl px-3 py-1 text-xs font-medium">
                         £29
@@ -469,7 +466,7 @@ export default function DocumentAnalysis() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
-                    className="bg-gradient-to-r from-[#FFF5EB]/50 to-[#FFFAF5]/70 rounded-xl p-6 mb-8 relative border border-[#F3EEE4]"
+                    className="bg-gradient-to-r from-orange-50/50 to-slate-50/70 rounded-xl p-6 mb-8 relative border border-slate-200"
                   >
                     <div className="text-center">
                       <h5 className="text-lg font-semibold text-gray-900 mb-3">Why Professional Legal Analysis Matters</h5>

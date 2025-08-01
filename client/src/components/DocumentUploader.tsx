@@ -304,7 +304,7 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
           isDragReject
             ? 'border-red-400 bg-red-50 scale-[1.02]'
             : isDragActive 
-              ? 'border-[#EC7134] bg-[#FBF8F2] scale-[1.02] shadow-xl' 
+              ? 'border-[#EC7134] bg-slate-50 scale-[1.02] shadow-xl' 
               : uploadError
                 ? 'border-red-300 bg-red-50/50'
                 : file
@@ -314,7 +314,7 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
       >
         {/* Enhanced animated background elements */}
         <div className={`absolute inset-0 transition-opacity duration-300 ${isDragActive ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="absolute inset-0 bg-gradient-to-br from-[#EC7134]/10 to-[#F3EEE4]/30 animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#EC7134]/10 to-slate-100/30 animate-pulse"></div>
           <div className="absolute top-0 left-0 w-full h-full">
             <svg width="100%" height="100%" className="opacity-20">
               <defs>
@@ -344,7 +344,7 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
                   ? 'bg-red-100'
                   : file
                     ? 'bg-green-100'
-                    : 'bg-[#FBF8F2] hover:bg-[#F3EEE4]'
+                    : 'bg-slate-50 hover:bg-slate-100'
           }`}>
             {uploadError ? (
               <AlertCircle className="w-8 h-8 text-red-500" />
@@ -446,14 +446,11 @@ export default function DocumentUploader({ onUploadStart, onUploadComplete }: Do
                     : 'bg-[#EC7134] hover:bg-[#E35F1E] text-white'
             }`}
             disabled={isUploading || isDragReject}
-            onClick={uploadError ? () => { setUploadError(null); setFile(null); } : undefined}
+            loading={isUploading}
+            loadingText="Uploading..."
+            onClick={uploadError ? () => { setUploadError(null); setFile(null); } : file ? () => setShowCaptcha(true) : undefined}
           >
-            {isUploading ? (
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Uploading...</span>
-              </div>
-            ) : uploadError ? (
+            {uploadError ? (
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-4 h-4" />
                 <span>Try Again</span>

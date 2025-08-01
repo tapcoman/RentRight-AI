@@ -78,7 +78,7 @@ export default function Contact() {
   return (
     <div className="bg-white">
       {/* Hero section */}
-      <div className="relative bg-[#FFFAF5] text-gray-800 py-16 overflow-hidden">
+      <div className="relative bg-slate-50 text-gray-800 py-16 overflow-hidden">
         {/* Background gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#EC7134]/5 to-transparent"></div>
         

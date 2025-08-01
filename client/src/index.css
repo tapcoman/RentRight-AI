@@ -290,12 +290,71 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-hover-lift:hover {
+.btn-hover-lift:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-.btn-hover-lift:active {
+.btn-hover-lift:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
+}
+
+/* Button loading state improvements */
+button:disabled {
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+}
+
+button:disabled * {
+  pointer-events: none;
+}
+
+/* Fix button interaction issues */
+button[data-loading="true"] {
+  cursor: wait !important;
+}
+
+/* Ensure proper z-index for button contents */
+button > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix button animation conflicts */
+button {
+  transform-origin: center;
+}
+
+/* Prevent animation conflicts when disabled */
+button:disabled {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Fix scale animation conflicts */
+button:not(:disabled):active {
+  transition-duration: 0.1s;
+}
+
+/* Improve button focus states */
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(236, 113, 52, 0.2);
+}
+
+/* Ensure consistent button interactions */
+.btn-primary, [data-loading="true"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Fix button text selection issues */
+button * {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Card hover effects */

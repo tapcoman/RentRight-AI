@@ -18,7 +18,7 @@ export default function CommonTenancyAgreementFAQs() {
   return (
     <div className="bg-white">
       {/* Hero section */}
-      <div className="relative bg-[#FFFAF5] text-gray-800 py-16 md:py-24 overflow-hidden">
+      <div className="relative bg-slate-50 text-gray-800 py-16 md:py-24 overflow-hidden">
         {/* Background gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#EC7134]/5 to-transparent"></div>
         

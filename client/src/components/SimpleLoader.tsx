@@ -15,7 +15,7 @@ export default function SimpleLoader({
   progress = 0 
 }: SimpleLoaderProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFFAF5] to-white flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
       <div className="max-w-md mx-auto text-center p-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}

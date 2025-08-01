@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 export function FriendlyHero() {
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="py-12 px-6 md:py-16 md:px-10 bg-[#FBF8F2] rounded-2xl shadow-sm border border-[#F3EEE4]">
+      <div className="py-12 px-6 md:py-16 md:px-10 bg-slate-50 rounded-2xl shadow-sm border border-slate-200">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           {/* Text content */}
           <div className="text-center md:text-left">

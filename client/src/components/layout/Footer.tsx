@@ -2,7 +2,7 @@ import { Logo } from '@/components/ui/logo';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#FBF8F2] mt-auto py-16 border-t border-[#F3EEE4]">
+    <footer className="bg-slate-50 mt-auto py-16 border-t border-slate-200">
       <div className="container mx-auto px-4">
         {/* Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -39,7 +39,7 @@ export default function Footer() {
         </div>
         
         {/* Bottom bar */}
-        <div className="border-t border-[#F3EEE4] pt-8 flex flex-col md:flex-row justify-between">
+        <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between">
           <div className="text-sm text-gray-500 mb-4 md:mb-0 flex items-center">
             © {new Date().getFullYear()} <span className="mx-1"><Logo size="sm" textColor="text-gray-500" accentColor="text-gray-500" withBackground={false} as="span" /></span> All rights reserved. <a href="https://rentrightai.co.uk" className="ml-1 text-gray-500 hover:text-[#EC7134]">rentrightai.co.uk</a>
           </div>

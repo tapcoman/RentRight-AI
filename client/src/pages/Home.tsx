@@ -156,7 +156,7 @@ export default function Home() {
 
   if (isUploading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#FFFAF5] to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
         <div className="max-w-md mx-auto text-center p-8">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -822,7 +822,7 @@ export default function Home() {
           </div>
           
           {/* Enhanced Interactive Demo */}
-          <div className="bg-gradient-to-br from-[#FBF8F2] to-white rounded-xl p-6 border border-gray-200 mb-8 max-w-2xl mx-auto shadow-sm">
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-6 border border-gray-200 mb-8 max-w-2xl mx-auto shadow-sm">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-[#EC7134]/10 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <FileText className="w-6 h-6 text-[#EC7134]" />
@@ -974,7 +974,7 @@ export default function Home() {
 
       
       {/* Enhanced Get started CTA section */}
-      <div className="bg-gradient-to-br from-[#FBF8F2] via-white to-[#F3EEE4] py-20 border-t border-[#F3EEE4]">
+      <div className="bg-gradient-to-br from-slate-50 via-white to-slate-100 py-20 border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             
@@ -1094,7 +1094,7 @@ export default function Home() {
       </div>
       
       {/* Enhanced FAQ section */}
-      <div className="py-12 bg-[#FFFAF5] border-t border-[#F3EEE4]">
+      <div className="py-12 bg-slate-50 border-t border-slate-200">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-8">
             <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#EC7134]/10 text-[#EC7134] mb-3">

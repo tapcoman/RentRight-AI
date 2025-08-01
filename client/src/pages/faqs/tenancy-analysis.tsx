@@ -17,7 +17,7 @@ export default function TenancyAnalysisFAQ() {
   return (
     <div className="bg-white">
       {/* Hero section */}
-      <div className="relative bg-[#FFFAF5] text-gray-800 py-16 md:py-24 overflow-hidden">
+      <div className="relative bg-slate-50 text-gray-800 py-16 md:py-24 overflow-hidden">
         {/* Background gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#EC7134]/5 to-transparent"></div>
         
@@ -110,7 +110,7 @@ export default function TenancyAnalysisFAQ() {
         </div>
 
         {/* How it works section */}
-        <div className="bg-[#FFFAF5] p-8 rounded-xl mb-12">
+        <div className="bg-slate-50 p-8 rounded-xl mb-12">
           <h2 className="text-2xl font-bold mb-6 text-[#1E293B]">How Tenancy Analysis Works</h2>
           
           <div className="space-y-6">

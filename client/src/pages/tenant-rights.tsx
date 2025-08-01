@@ -16,7 +16,7 @@ export default function TenantRights() {
   return (
     <div className="bg-white">
       {/* Enhanced Hero section with animations */}
-      <div className="relative bg-[#FFFAF5] text-gray-800 py-16 md:py-24 overflow-hidden">
+      <div className="relative bg-slate-50 text-gray-800 py-16 md:py-24 overflow-hidden">
         {/* Animated background gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#EC7134]/5 to-transparent"></div>
         
@@ -54,7 +54,7 @@ export default function TenantRights() {
       {/* Main content container */}
       <div className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Hero CTA Box */}
-        <div className="bg-gradient-to-r from-[#FFF5EB] to-[#FFF8F2] p-6 rounded-lg shadow-sm mb-12 flex flex-col md:flex-row items-center justify-between">
+        <div className="bg-gradient-to-r from-orange-50 to-orange-25 p-6 rounded-lg shadow-sm mb-12 flex flex-col md:flex-row items-center justify-between">
           <div className="mb-4 md:mb-0 md:mr-6">
             <h2 className="text-2xl font-semibold text-[#EC7134] mb-2">Not sure if your tenancy agreement protects your rights?</h2>
             <p className="text-gray-600">
@@ -155,7 +155,7 @@ export default function TenantRights() {
               </Card>
             </div>
 
-            <div className="mt-8 bg-[#FFF5EB] p-6 rounded-lg">
+            <div className="mt-8 bg-orange-50 p-6 rounded-lg">
               <h3 className="text-xl font-semibold text-[#EC7134] mb-4">Common Deposit Issues</h3>
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
@@ -253,7 +253,7 @@ export default function TenantRights() {
               </Card>
             </div>
 
-            <div className="mt-8 bg-[#FFF5EB] p-6 rounded-lg">
+            <div className="mt-8 bg-orange-50 p-6 rounded-lg">
               <h3 className="text-xl font-semibold text-[#EC7134] mb-4">Repairs & Maintenance Process</h3>
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
@@ -352,7 +352,7 @@ export default function TenantRights() {
               </Card>
             </div>
 
-            <div className="mt-8 bg-[#FFF5EB] p-6 rounded-lg">
+            <div className="mt-8 bg-orange-50 p-6 rounded-lg">
               <h3 className="text-xl font-semibold text-[#EC7134] mb-4">Privacy & Access FAQs</h3>
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
@@ -464,7 +464,7 @@ export default function TenantRights() {
               </Card>
             </div>
 
-            <div className="mt-8 bg-[#FFF5EB] p-6 rounded-lg">
+            <div className="mt-8 bg-orange-50 p-6 rounded-lg">
               <h3 className="text-xl font-semibold text-[#EC7134] mb-4">Dealing with Eviction Notices</h3>
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">

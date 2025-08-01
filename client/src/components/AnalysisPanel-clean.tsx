@@ -69,7 +69,7 @@ export default function AnalysisPanel({
 
       {/* Streamlined upgrade prompt for non-paid users */}
       {!isPaidAnalysis && (
-        <div className="bg-gradient-to-br from-[#FFFAF5] to-[#FFF5F0] rounded-xl border border-[#EC7134]/20 p-6 mb-6">
+        <div className="bg-gradient-to-br from-slate-50 to-orange-50 rounded-xl border border-[#EC7134]/20 p-6 mb-6">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-[#EC7134]/10 rounded-full mb-4">
               <svg className="w-6 h-6 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

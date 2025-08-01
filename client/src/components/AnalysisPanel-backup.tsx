@@ -41,7 +41,7 @@ export default function AnalysisPanel({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFFAF5] to-[#FFF5F0]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg border border-[#EC7134]/10 overflow-hidden">
           {/* Header Section */}
@@ -74,7 +74,7 @@ export default function AnalysisPanel({
             {!isPaidAnalysis && (
               <div className="space-y-6">
                 {/* Primary upgrade prompt */}
-                <div className="bg-gradient-to-br from-[#FFFAF5] to-[#FFF5F0] rounded-xl border border-[#EC7134]/20 p-6">
+                <div className="bg-gradient-to-br from-slate-50 to-orange-50 rounded-xl border border-[#EC7134]/20 p-6">
                   <div className="text-center">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-[#EC7134]/10 rounded-full mb-4">
                       <svg className="w-6 h-6 text-[#EC7134]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -165,7 +165,7 @@ export default function AnalysisPanel({
             {results && (
               <div className="space-y-6 mt-6">
                 {/* Compliance Score Section */}
-                <div className="bg-gradient-to-br from-[#FFFAF5] to-[#FFF5F0] rounded-xl border border-[#EC7134]/20 p-6">
+                <div className="bg-gradient-to-br from-slate-50 to-orange-50 rounded-xl border border-[#EC7134]/20 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">Overall Compliance Score</h3>
                     <div className="text-right">

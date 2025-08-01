@@ -7,7 +7,7 @@ const PrivacyPolicy = () => {
   return (
     <div className="bg-white">
       {/* Hero section */}
-      <div className="relative bg-[#FFFAF5] text-gray-800 py-16 md:py-20 overflow-hidden">
+      <div className="relative bg-slate-50 text-gray-800 py-16 md:py-20 overflow-hidden">
         {/* Background gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#EC7134]/5 to-transparent"></div>
         
@@ -162,7 +162,7 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* CTA Box */}
-        <div className="mt-12 bg-[#FFFAF5] p-8 rounded-xl border border-[#F3EEE4]">
+        <div className="mt-12 bg-slate-50 p-8 rounded-xl border border-slate-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Have questions about our privacy practices?</h3>
