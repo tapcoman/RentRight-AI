@@ -44,10 +44,10 @@ export function SentryTestComponent({ onClose }: SentryTestComponentProps) {
   }
 
   return (
-    <Card className="fixed top-4 right-4 w-80 z-50 bg-yellow-50 border-yellow-200">
+    <Card className="fixed top-4 right-4 w-80 z-50 bg-slate-50 border-slate-200">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm text-yellow-800">Sentry Test Panel</CardTitle>
-        <CardDescription className="text-xs text-yellow-600">
+        <CardTitle className="text-sm text-slate-800">Sentry Test Panel</CardTitle>
+        <CardDescription className="text-xs text-slate-600">
           Development only - Test error reporting
         </CardDescription>
       </CardHeader>

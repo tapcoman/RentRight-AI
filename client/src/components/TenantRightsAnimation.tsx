@@ -38,7 +38,7 @@ export default function TenantRightsAnimation() {
       title: "Repairs & Maintenance",
       description: "Your landlord is responsible for structural repairs, heating, plumbing, electrical systems, and ensuring the property is safe.",
       icon: <FileText className="w-16 h-16" />,
-      color: "bg-amber-100 text-amber-600",
+      color: "bg-slate-100 text-slate-600",
       animation: { opacity: 1, scale: 1, y: 0 }
     },
     {

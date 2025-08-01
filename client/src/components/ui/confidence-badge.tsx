@@ -15,7 +15,7 @@ const ConfidenceBadge = ({ confidence, className }: ConfidenceBadgeProps) => {
       break;
     case "medium":
     case "medium confidence":
-      color = "bg-[#ECC94B]/10 text-[#ECC94B]";
+      color = "bg-[#64748b]/10 text-[#64748b]";
       break;
     case "low":
     case "low confidence":

@@ -882,19 +882,19 @@ export default function Home() {
 
                   {/* Warning Issue */}
                   <motion.div 
-                    className="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-4"
+                    className="bg-slate-50 border-l-4 border-slate-500 rounded-r-lg p-4"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 1.8, duration: 0.5 }}
                   >
                     <div className="flex items-start space-x-3">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <AlertTriangle className="w-5 h-5 text-slate-600 mt-0.5 flex-shrink-0" />
                       <div>
-                        <div className="font-semibold text-amber-800 text-sm">WARNING: Excessive Cleaning Requirement</div>
-                        <div className="text-amber-700 text-xs mt-1">
+                        <div className="font-semibold text-slate-800 text-sm">WARNING: Excessive Cleaning Requirement</div>
+                        <div className="text-slate-700 text-xs mt-1">
                           "Professional carpet cleaning required regardless of condition" may be unfair and unreasonable
                         </div>
-                        <div className="text-amber-600 text-xs mt-2 font-medium">⚖️ Risk: Potential deposit deduction challenge</div>
+                        <div className="text-slate-600 text-xs mt-2 font-medium">⚖️ Risk: Potential deposit deduction challenge</div>
                       </div>
                     </div>
                   </motion.div>
@@ -996,8 +996,8 @@ export default function Home() {
               {/* Risk indicators */}
               <div className="space-y-4 mb-8">
                 <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <AlertCircle className="w-3 h-3 text-yellow-600" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <AlertCircle className="w-3 h-3 text-slate-600" />
                   </div>
                   <div>
                     <p className="font-medium text-gray-800">Excessive deposit demands</p>

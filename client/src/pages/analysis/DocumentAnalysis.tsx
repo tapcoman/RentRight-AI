@@ -69,6 +69,7 @@ export default function DocumentAnalysis() {
       analysisId: analysis?.id,
       analysisIsPaid: analysis?.isPaid,
       hasAnalysisResults: !!analysis?.results,
+      analysisResultsInsights: analysis?.results?.insights?.length || 0,
       isLoading,
       isAnalysisComplete,
       isFullAnalysisComplete,
@@ -77,7 +78,11 @@ export default function DocumentAnalysis() {
     });
     
     if (analysis?.results) {
-      console.log('Analysis results preview:', analysis.results);
+      console.log('Analysis results preview:', {
+        hasInsights: !!analysis.results.insights,
+        insightsCount: analysis.results.insights?.length || 0,
+        fullResults: analysis.results
+      });
     }
   }, [documentId, document, analysis, isLoading, isAnalysisComplete, isFullAnalysisComplete, isAnalyzing, analysisError]);
   
@@ -245,47 +250,7 @@ export default function DocumentAnalysis() {
           />
           {(isAnalysisComplete || isFullAnalysisComplete) && analysis ? (
             <div className="space-y-8">
-              {/* Success Banner */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6"
-              >
-                <div className="flex items-center justify-center mb-4">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                    <Check className="w-8 h-8 text-green-600" />
-                  </div>
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold text-green-800 mb-2">
-                      {analysis.isPaid ? 'Premium Analysis Complete!' : 'Analysis Complete!'}
-                    </h1>
-                    <p className="text-green-700">
-                      Your tenancy agreement has been analyzed. Review the results below.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button
-                    onClick={() => setLocation(`/analysis/${documentId}/report`)}
-                    className="bg-[#EC7134] hover:bg-[#DC6327] text-white font-medium px-6 py-3"
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    View Full Report
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => generateReport(analysis.isPaid)}
-                    className="border-[#EC7134] text-[#EC7134] hover:bg-[#EC7134] hover:text-white font-medium px-6 py-3"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </div>
-              </motion.div>
-
-              {/* Analysis Results */}
+              {/* Analysis Results - Display Immediately */}
               <AnalysisPanel
                 analysis={analysis}
                 isPaidAnalysis={analysis.isPaid}

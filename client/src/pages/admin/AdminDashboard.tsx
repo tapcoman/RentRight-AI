@@ -116,7 +116,7 @@ function ActivityFeed({ activities }: { activities: DashboardMetrics['recentActi
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'success': return 'text-green-500';
-      case 'warning': return 'text-yellow-500';
+      case 'warning': return 'text-slate-500';
       case 'error': return 'text-red-500';
       default: return 'text-muted-foreground';
     }

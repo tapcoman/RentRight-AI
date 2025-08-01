@@ -103,7 +103,7 @@ export default function ReportView() {
       if (insight.type === 'warning') {
         seriousLegalIssues++;
       }
-      // Check if it's an accent type insight (yellow flag)
+      // Check if it's an accent type insight (gray flag)
       else if (insight.type === 'accent') {
         moderateLegalIssues++;
       }
@@ -135,25 +135,25 @@ export default function ReportView() {
       color = '#EF4444'; // Red
     } 
     else if (seriousLegalIssues === 2) {
-      // YELLOW: Two serious issues
-      complianceLevel = 'yellow';
+      // GRAY: Two serious issues
+      complianceLevel = 'gray';
       complianceText = 'This agreement has some potential compliance concerns with UK housing laws.';
       score = 50;
-      color = '#F2B705'; // Amber/Yellow
+      color = '#64748b'; // Slate gray
     }
     else if (seriousLegalIssues === 1) {
-      // YELLOW: One serious issue
-      complianceLevel = 'yellow';
+      // GRAY: One serious issue
+      complianceLevel = 'gray';
       complianceText = 'This agreement generally complies with UK housing laws, with one area requiring attention.';
       score = 65;
-      color = '#F2B705'; // Amber/Yellow
+      color = '#64748b'; // Slate gray
     }
     else if (moderateLegalIssues >= 2) {
-      // YELLOW: Multiple moderate issues but no serious issues
-      complianceLevel = 'yellow';
+      // GRAY: Multiple moderate issues but no serious issues
+      complianceLevel = 'gray';
       complianceText = 'This agreement generally complies with UK housing laws, with a few consideration points.';
       score = 75;
-      color = '#F2B705'; // Amber/Yellow
+      color = '#64748b'; // Slate gray
     }
     else {
       // GREEN: No serious issues and at most one moderate issue
@@ -431,23 +431,23 @@ export default function ReportView() {
       <Card className="mb-6 p-4 sm:p-6 print:shadow-none print:border-none relative overflow-hidden">
         <div className={`absolute inset-0 opacity-10 ${
           complianceInfo.level === 'green' ? 'bg-green-500' :
-          complianceInfo.level === 'yellow' ? 'bg-amber-500' : 'bg-red-500'
+          complianceInfo.level === 'gray' ? 'bg-slate-500' : 'bg-red-500'
         }`}></div>
         
         <div className="relative z-10">
           <div className="flex items-center mb-4">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
               complianceInfo.level === 'green' ? 'bg-green-100' :
-              complianceInfo.level === 'yellow' ? 'bg-amber-100' : 'bg-red-100'
+              complianceInfo.level === 'gray' ? 'bg-slate-100' : 'bg-red-100'
             }`}>
               <svg className={`w-5 h-5 ${
                 complianceInfo.level === 'green' ? 'text-green-600' :
-                complianceInfo.level === 'yellow' ? 'text-amber-600' : 'text-red-600'
+                complianceInfo.level === 'gray' ? 'text-slate-600' : 'text-red-600'
               }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
                   d={complianceInfo.level === 'green' 
                     ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
-                    : complianceInfo.level === 'yellow'
+                    : complianceInfo.level === 'gray'
                     ? "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                     : "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   } 
@@ -456,7 +456,7 @@ export default function ReportView() {
             </div>
             <h2 className={`text-2xl font-bold print:text-xl ${
               complianceInfo.level === 'green' ? 'text-green-600' :
-              complianceInfo.level === 'yellow' ? 'text-amber-600' : 'text-red-600'
+              complianceInfo.level === 'gray' ? 'text-slate-600' : 'text-red-600'
             }`}>Compliance Assessment</h2>
           </div>
           
@@ -465,7 +465,7 @@ export default function ReportView() {
               <div 
                 className={`h-full rounded-full ${
                   complianceInfo.level === 'green' ? 'bg-gradient-to-r from-green-400 to-green-500' :
-                  complianceInfo.level === 'yellow' ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
+                  complianceInfo.level === 'gray' ? 'bg-gradient-to-r from-slate-400 to-slate-500' :
                   'bg-gradient-to-r from-red-400 to-red-500'
                 }`}
                 style={{ width: `${complianceInfo.score}%` }}
@@ -474,7 +474,7 @@ export default function ReportView() {
             <div className="ml-4">
               <span className={`text-xl font-bold ${
                 complianceInfo.level === 'green' ? 'text-green-500' :
-                complianceInfo.level === 'yellow' ? 'text-amber-500' :
+                complianceInfo.level === 'gray' ? 'text-slate-500' :
                 'text-red-500'
               }`}>
                 {complianceInfo.score}%
@@ -485,11 +485,11 @@ export default function ReportView() {
           <div className="mt-4">
             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
               complianceInfo.level === 'green' ? 'bg-green-100 text-green-800' :
-              complianceInfo.level === 'yellow' ? 'bg-amber-100 text-amber-800' :
+              complianceInfo.level === 'gray' ? 'bg-slate-100 text-slate-800' :
               'bg-red-100 text-red-800'
             }`}>
               {complianceInfo.level === 'green' ? 'Good - Generally Fair Agreement' :
-               complianceInfo.level === 'yellow' ? 'Attention Required' :
+               complianceInfo.level === 'gray' ? 'Attention Required' :
                'Multiple Serious Issues'}
             </div>
           </div>
@@ -502,7 +502,7 @@ export default function ReportView() {
       
       {/* Lease Rewrite Section - only show if analysis indicates issues */}
       {complianceInfo.score < 80 && (
-        <Card className="mb-6 p-4 sm:p-6 print:hidden relative overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
+        <Card className="mb-6 p-4 sm:p-6 print:hidden relative overflow-hidden bg-gradient-to-br from-orange-50 to-slate-50 border-orange-200">
           <div className="absolute inset-0 opacity-5 bg-orange-500"></div>
           <div className="relative z-10">
             <div className="flex items-center mb-4">
@@ -779,15 +779,15 @@ export default function ReportView() {
       {/* Concerns */}
       {accentInsights.length > 0 && (
         <Card className="mb-6 p-4 sm:p-6 print:shadow-none print:border-none relative overflow-hidden">
-          <div className="absolute inset-0 opacity-5 bg-amber-500"></div>
+          <div className="absolute inset-0 opacity-5 bg-slate-500"></div>
           <div className="relative z-10">
             <div className="flex items-center mb-4">
-              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
-                <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3">
+                <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold print:text-xl text-amber-600">Areas of Concern</h2>
+              <h2 className="text-2xl font-bold print:text-xl text-slate-600">Areas of Concern</h2>
             </div>
             <ul className="space-y-4 mt-5">
               {accentInsights.map((insight: any, index: number) => {
@@ -797,21 +797,21 @@ export default function ReportView() {
                 const ratingLabel = hasRating ? insight.rating.label : 'Moderate Protection';
                 
                 // Determine UI styling based on rating
-                let borderClass = "border-amber-200";
-                let bgClass = "bg-amber-50";
-                let headingClass = "text-amber-700";
+                let borderClass = "border-slate-200";
+                let bgClass = "bg-slate-50";
+                let headingClass = "text-slate-700";
                 
-                // Higher ratings (better protection) get lighter amber shades
+                // Higher ratings (better protection) get lighter gray shades
                 if (ratingValue >= 80) {
-                  borderClass = "border-amber-100";
-                  bgClass = "bg-amber-50/60";
-                  headingClass = "text-amber-600";
+                  borderClass = "border-slate-100";
+                  bgClass = "bg-slate-50/60";
+                  headingClass = "text-slate-600";
                 } 
-                // Lower ratings (worse protection) get deeper amber shades
+                // Lower ratings (worse protection) get deeper gray shades
                 else if (ratingValue < 60) {
-                  borderClass = "border-amber-300";
-                  bgClass = "bg-amber-100";
-                  headingClass = "text-amber-800";
+                  borderClass = "border-slate-300";
+                  bgClass = "bg-slate-100";
+                  headingClass = "text-slate-800";
                 }
                 
                 return (
@@ -823,7 +823,7 @@ export default function ReportView() {
                       {hasRating && (
                         <span className={`text-xs px-2 py-1 rounded-full ${
                           ratingValue >= 80 ? "bg-green-50 text-green-700 border border-green-200" :
-                          ratingValue >= 70 ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                          ratingValue >= 70 ? "bg-slate-50 text-slate-700 border border-slate-200" :
                           "bg-orange-50 text-orange-700 border border-orange-200"
                         }`}>
                           {ratingValue >= 80 ? "Review Required" :
@@ -881,26 +881,26 @@ export default function ReportView() {
       {/* Fair Protection Sections */}
       {fairProtectionInsights.length > 0 && (
         <Card className="mb-6 p-4 sm:p-6 print:shadow-none print:border-none relative overflow-hidden">
-          <div className="absolute inset-0 opacity-5 bg-amber-500"></div>
+          <div className="absolute inset-0 opacity-5 bg-slate-500"></div>
           <div className="relative z-10">
             <div className="flex items-center mb-4">
-              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
-                <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3">
+                <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold print:text-xl text-amber-600">Fair Protections</h2>
+              <h2 className="text-2xl font-bold print:text-xl text-slate-600">Fair Protections</h2>
             </div>
             <ul className="space-y-4 mt-5">
               {fairProtectionInsights.map((insight: any, index: number) => {
                 return (
-                  <li key={index} className="border border-amber-200 rounded-lg p-4 bg-amber-50">
-                    <h3 className="text-lg font-medium text-amber-700 mb-2">{insight.title}</h3>
+                  <li key={index} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                    <h3 className="text-lg font-medium text-slate-700 mb-2">{insight.title}</h3>
                     <p className="text-gray-700">{insight.content}</p>
                     {insight.indicators && insight.indicators.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {insight.indicators.map((indicator: string, i: number) => (
-                          <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                          <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
                             {indicator}
                           </span>
                         ))}

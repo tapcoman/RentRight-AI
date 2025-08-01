@@ -93,7 +93,7 @@ export default function TenancyAnalysisFAQ() {
             <h3 className="text-xl font-bold mb-3 text-gray-800">Traffic Light Rating System</h3>
             <p className="text-gray-600">
               Our clear color-coding system shows you at a glance how fair your agreement is: green for fair terms,
-              amber for potentially unfair terms, and red for terms that may violate your legal rights.
+              gray for potentially unfair terms, and red for terms that may violate your legal rights.
             </p>
           </div>
 

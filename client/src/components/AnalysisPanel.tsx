@@ -35,6 +35,19 @@ export default function AnalysisPanel({
   const { toast } = useToast();
 
   const results = analysis?.results as any;
+  
+  // Debug logging for analysis panel
+  console.log('AnalysisPanel Debug:', {
+    hasAnalysis: !!analysis,
+    isPaidAnalysis,
+    hasResults: !!results,
+    hasInsights: !!results?.insights,
+    insightsCount: results?.insights?.length || 0,
+    analysisStructure: results ? Object.keys(results) : [],
+    analysisId: analysis?.id,
+    documentId: analysis?.documentId,
+    rawResults: results
+  });
 
   const handleShowPaymentModal = () => {
     try {
@@ -189,8 +202,8 @@ export default function AnalysisPanel({
         </div>
       )}
 
-      {/* Clean Analysis Content */}
-      {isPaidAnalysis && results?.insights && (
+      {/* Clean Analysis Content - Show for both paid and free analyses */}
+      {results?.insights && results.insights.length > 0 ? (
         <div className="px-6 pb-6">
           <div className="space-y-4">
             {results.insights.map((insight: any, index: number) => (
@@ -201,14 +214,14 @@ export default function AnalysisPanel({
                       insight.severity === 'high' || insight.type === 'warning' 
                         ? 'bg-red-100'
                         : insight.severity === 'medium' 
-                        ? 'bg-amber-100'
+                        ? 'bg-slate-100'
                         : 'bg-green-100'
                     }`}>
                       <svg className={`w-4 h-4 ${
                         insight.severity === 'high' || insight.type === 'warning' 
                           ? 'text-red-600'
                           : insight.severity === 'medium' 
-                          ? 'text-amber-600'
+                          ? 'text-slate-600'
                           : 'text-green-600'
                       }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         {insight.severity === 'high' || insight.type === 'warning' ? (
@@ -228,7 +241,7 @@ export default function AnalysisPanel({
                     insight.severity === 'high' || insight.type === 'warning' 
                       ? 'bg-red-100 text-red-800' 
                       : insight.severity === 'medium' 
-                      ? 'bg-amber-100 text-amber-800'
+                      ? 'bg-slate-100 text-slate-800'
                       : 'bg-green-100 text-green-800'
                   }`}>
                     {insight.severity === 'high' ? 'High Priority' : insight.severity === 'medium' ? 'Medium Priority' : 'Good'}
@@ -254,7 +267,22 @@ export default function AnalysisPanel({
             ))}
           </div>
         </div>
-      )}
+      ) : isPaidAnalysis ? (
+        <div className="px-6 pb-6">
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-slate-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Analysis Results Found</h3>
+            <p className="text-gray-600 mb-4">
+              Your analysis is complete, but no results data was found. This may be a temporary issue.
+            </p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh Page
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Clean Generate Report Section */}
       {isPaidAnalysis && (

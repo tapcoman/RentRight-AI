@@ -47,16 +47,16 @@ export function HeroShowcase() {
       ),
       title: "Repair Issues Identified",
       description: "This repair clause unfairly burdens you with costs",
-      color: "bg-amber-500",
+      color: "bg-slate-500",
       content: (
         <div className="mt-3 bg-white rounded-md p-3 text-xs text-gray-700 shadow-sm">
-          <div className="border-l-2 border-amber-500 pl-2 mb-2 text-sm font-medium text-gray-900">
+          <div className="border-l-2 border-slate-500 pl-2 mb-2 text-sm font-medium text-gray-900">
             Unfair Repair Clause
           </div>
           <p className="mb-2">
             "Tenant responsible for all repairs regardless of cause..."
           </p>
-          <div className="bg-amber-50 p-2 rounded border border-amber-100 text-amber-700 text-xs">
+          <div className="bg-slate-50 p-2 rounded border border-slate-100 text-slate-700 text-xs">
             Landlord must handle structural & exterior repairs per Landlord and Tenant Act 1985.
           </div>
         </div>

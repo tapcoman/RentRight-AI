@@ -130,16 +130,16 @@ export default function AnalysisPanel({
                     </div>
                   </div>
                   
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                     <div className="flex items-start">
-                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mr-3">
-                        <svg className="w-4 h-4 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 mr-3">
+                        <svg className="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                       </div>
                       <div>
-                        <h4 className="font-medium text-yellow-900 text-sm mb-1">Hidden Break Costs</h4>
-                        <p className="text-yellow-700 text-xs">Early termination could cost £2,000+ in penalties</p>
+                        <h4 className="font-medium text-slate-900 text-sm mb-1">Hidden Break Costs</h4>
+                        <p className="text-slate-700 text-xs">Early termination could cost £2,000+ in penalties</p>
                       </div>
                     </div>
                   </div>
@@ -171,7 +171,7 @@ export default function AnalysisPanel({
                     <div className="text-right">
                       <div className={`text-3xl font-bold ${
                         results.complianceScore >= 80 ? 'text-green-600' :
-                        results.complianceScore >= 60 ? 'text-yellow-600' : 'text-red-600'
+                        results.complianceScore >= 60 ? 'text-slate-600' : 'text-red-600'
                       }`}>
                         {results.complianceScore}%
                       </div>
@@ -183,7 +183,7 @@ export default function AnalysisPanel({
                     <div 
                       className={`h-3 rounded-full transition-all duration-500 ${
                         results.complianceScore >= 80 ? 'bg-green-500' :
-                        results.complianceScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                        results.complianceScore >= 60 ? 'bg-slate-500' : 'bg-red-500'
                       }`}
                       style={{ width: `${results.complianceScore}%` }}
                     ></div>
@@ -220,7 +220,7 @@ export default function AnalysisPanel({
                               }
                               className={
                                 issue.severity === 'critical' ? 'bg-red-50 text-red-700 border-red-200' :
-                                issue.severity === 'warning' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                issue.severity === 'warning' ? 'bg-slate-50 text-slate-700 border-slate-200' :
                                 'bg-green-50 text-green-700 border-green-200'
                               }
                             >

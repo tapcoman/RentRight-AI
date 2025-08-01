@@ -6,7 +6,7 @@ interface LegalDocumentVisualizerProps {
   documentId: string;
   insightCount: number;
   issueCount: number;
-  complianceLevel: 'green' | 'yellow' | 'red';
+  complianceLevel: 'green' | 'gray' | 'red';
   totalPages?: number;
   className?: string;
 }
@@ -37,14 +37,14 @@ export function LegalDocumentVisualizer({
   const statusColor = 
     complianceLevel === 'green' 
       ? '#48BB78' // green
-      : complianceLevel === 'yellow' 
-        ? '#ECC94B' // yellow
+      : complianceLevel === 'gray' 
+        ? '#64748b' // slate gray
         : '#F56565'; // red
   
   const statusText = 
     complianceLevel === 'green' 
       ? 'Compliant' 
-      : complianceLevel === 'yellow' 
+      : complianceLevel === 'gray' 
         ? 'Review Suggested' 
         : 'Issues Detected';
   
@@ -98,7 +98,7 @@ export function LegalDocumentVisualizer({
                         </svg>
                       )}
                       
-                      {complianceLevel === 'yellow' && (
+                      {complianceLevel === 'gray' && (
                         <svg className={`w-8 h-8 text-${statusColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>

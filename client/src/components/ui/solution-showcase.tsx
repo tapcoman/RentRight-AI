@@ -149,14 +149,14 @@ const StepVisual = ({ step }: { step: number }) => {
             >
               <div className="flex items-start mb-3">
                 <div className="flex-shrink-0 mr-3">
-                  <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-amber-700 mb-1 text-sm">Possible Issue Detected</h4>
+                  <h4 className="font-medium text-slate-700 mb-1 text-sm">Possible Issue Detected</h4>
                   <p className="text-xs text-gray-600">Clause 8.3 - Repair Obligations</p>
                 </div>
               </div>
@@ -164,8 +164,8 @@ const StepVisual = ({ step }: { step: number }) => {
                 <div className="text-sm bg-white p-3 rounded border border-gray-100 text-gray-600 mb-3">
                   "The tenant shall be responsible for all repairs to the property regardless of cause..."
                 </div>
-                <div className="bg-amber-50 p-3 rounded border border-amber-100 text-sm">
-                  <span className="font-medium text-amber-700 block mb-1">AI Analysis:</span>
+                <div className="bg-slate-50 p-3 rounded border border-slate-100 text-sm">
+                  <span className="font-medium text-slate-700 block mb-1">AI Analysis:</span>
                   <p className="text-xs text-gray-700">This clause unfairly assigns all repair responsibilities to the tenant, which is contrary to the Landlord and Tenant Act 1985 Section 11.</p>
                 </div>
               </div>
@@ -214,10 +214,10 @@ const StepVisual = ({ step }: { step: number }) => {
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Overall Risk Level</span>
-                    <span className="font-medium text-amber-600">Moderate</span>
+                    <span className="font-medium text-slate-600">Moderate</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-amber-400 h-2 rounded-full" style={{ width: '65%' }}></div>
+                    <div className="bg-slate-400 h-2 rounded-full" style={{ width: '65%' }}></div>
                   </div>
                 </div>
                 
@@ -231,7 +231,7 @@ const StepVisual = ({ step }: { step: number }) => {
                   </li>
                   <li className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+                      <span className="w-2 h-2 bg-slate-500 rounded-full mr-2"></span>
                       <span className="text-gray-600">Unfair Terms</span>
                     </div>
                     <span className="font-medium">4</span>
@@ -245,7 +245,7 @@ const StepVisual = ({ step }: { step: number }) => {
                   </li>
                 </ul>
                 
-                <div className="bg-amber-50 p-3 rounded text-xs text-amber-800 border border-amber-100">
+                <div className="bg-slate-50 p-3 rounded text-xs text-slate-800 border border-slate-100">
                   <p className="font-medium mb-1">Estimated Financial Risk:</p>
                   <p>Potential £1,800 in excessive charges and deposit disputes</p>
                 </div>
@@ -372,13 +372,13 @@ export function SolutionShowcase() {
     },
     {
       icon: (
-        <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
       ),
       title: "Risk Assessment",
       description: "Quantify your financial and legal risks with clear metrics",
-      color: "border-amber-500"
+      color: "border-slate-500"
     },
     {
       icon: (

@@ -131,7 +131,7 @@ export default function AnalysisPanel({
                   insight.severity === 'high' || insight.type === 'warning' 
                     ? 'bg-red-100 text-red-800' 
                     : insight.severity === 'medium' 
-                    ? 'bg-amber-100 text-amber-800'
+                    ? 'bg-slate-100 text-slate-800'
                     : 'bg-green-100 text-green-800'
                 }`}>
                   {insight.severity || insight.type || 'Review'}
