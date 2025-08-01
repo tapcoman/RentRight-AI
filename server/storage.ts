@@ -386,13 +386,24 @@ export class DatabaseStorage implements IStorage {
         .where(eq(analyses.documentId, documentId));
       
       if (analysis) {
-        console.log('🗄️ Storage retrieved analysis:', {
+        console.log('🗄️ CRITICAL: Storage retrieved analysis:', {
           id: analysis.id,
           documentId: analysis.documentId,
           isPaid: analysis.isPaid,
           hasResults: !!analysis.results,
-          resultsType: typeof analysis.results
+          resultsType: typeof analysis.results,
+          
+          // DETAILED RETRIEVAL INSPECTION
+          resultsKeys: analysis.results && typeof analysis.results === 'object' ? Object.keys(analysis.results) : [],
+          hasInsights: analysis.results && typeof analysis.results === 'object' && 'insights' in analysis.results,
+          insightsType: analysis.results && typeof analysis.results === 'object' ? typeof analysis.results.insights : 'N/A',
+          insightsCount: analysis.results && typeof analysis.results === 'object' && Array.isArray(analysis.results.insights) ? analysis.results.insights.length : 0
         });
+        
+        // LOG FULL RETRIEVED RESULTS
+        console.log('🗄️ RETRIEVED RESULTS:', JSON.stringify(analysis.results, null, 2));
+      } else {
+        console.log('🗄️ No analysis found for document:', documentId);
       }
       
       return analysis;
@@ -404,13 +415,21 @@ export class DatabaseStorage implements IStorage {
 
   async createAnalysis(insertAnalysis: InsertAnalysis): Promise<Analysis> {
     try {
-      console.log('🗄️ Storage creating analysis:', {
+      console.log('🗄️ CRITICAL: Storage creating analysis:', {
         documentId: insertAnalysis.documentId,
         isPaid: insertAnalysis.isPaid,
         hasResults: !!insertAnalysis.results,
         resultsType: typeof insertAnalysis.results,
-        resultsHasInsights: insertAnalysis.results && typeof insertAnalysis.results === 'object' && 'insights' in insertAnalysis.results
+        resultsHasInsights: insertAnalysis.results && typeof insertAnalysis.results === 'object' && 'insights' in insertAnalysis.results,
+        
+        // DETAILED RESULTS INSPECTION
+        resultsKeys: insertAnalysis.results && typeof insertAnalysis.results === 'object' ? Object.keys(insertAnalysis.results) : [],
+        insightsCount: insertAnalysis.results && typeof insertAnalysis.results === 'object' && Array.isArray(insertAnalysis.results.insights) ? insertAnalysis.results.insights.length : 0,
+        resultsJsonSize: insertAnalysis.results ? JSON.stringify(insertAnalysis.results).length : 0
       });
+      
+      // LOG FULL RESULTS OBJECT FOR DEBUGGING
+      console.log('🗄️ FULL RESULTS BEING STORED:', JSON.stringify(insertAnalysis.results, null, 2));
       
       // Ensure created_at is set for database cleanup
       const [analysis] = await db
@@ -422,11 +441,18 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
       
-      console.log('🗄️ Storage created analysis successfully:', {
+      console.log('🗄️ CRITICAL: Storage created analysis successfully:', {
         id: analysis.id,
         documentId: analysis.documentId,
-        isPaid: analysis.isPaid
+        isPaid: analysis.isPaid,
+        hasStoredResults: !!analysis.results,
+        storedResultsType: typeof analysis.results,
+        storedResultsKeys: analysis.results && typeof analysis.results === 'object' ? Object.keys(analysis.results) : [],
+        storedInsightsCount: analysis.results && typeof analysis.results === 'object' && Array.isArray(analysis.results.insights) ? analysis.results.insights.length : 0
       });
+      
+      // LOG WHAT WAS ACTUALLY STORED
+      console.log('🗄️ STORED RESULTS:', JSON.stringify(analysis.results, null, 2));
       
       return analysis;
     } catch (error) {

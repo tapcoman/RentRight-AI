@@ -71,8 +71,8 @@ export default function AnalysisPanel({
     return null;
   })();
   
-  // Enhanced debug logging for analysis panel
-  console.log('🔍 AnalysisPanel Debug:', {
+  // CRITICAL ENHANCED debug logging for analysis panel
+  console.log('🔍 CRITICAL AnalysisPanel Debug:', {
     hasAnalysis: !!analysis,
     isPaidAnalysis,
     hasResults: !!results,
@@ -84,8 +84,38 @@ export default function AnalysisPanel({
     analysisIsPaid: analysis?.isPaid,
     resultsType: typeof results,
     insightsType: typeof results?.insights,
-    firstInsight: results?.insights?.[0]
+    isInsightsArray: Array.isArray(results?.insights),
+    firstInsight: results?.insights?.[0],
+    
+    // RAW DATA INSPECTION
+    rawAnalysisResults: analysis?.results,
+    rawAnalysisResultsType: typeof analysis?.results,
+    rawAnalysisResultsKeys: analysis?.results ? Object.keys(analysis.results) : [],
+    processedResultsObject: results,
+    processedResultsKeys: results ? Object.keys(results) : [],
   });
+  
+  // SEPARATE DETAILED LOGS
+  console.log('🔍 RAW ANALYSIS OBJECT:', analysis);
+  console.log('🔍 RAW ANALYSIS RESULTS:', analysis?.results);
+  console.log('🔍 PROCESSED RESULTS OBJECT:', results);
+  
+  if (results?.insights) {
+    console.log('🔍 INSIGHTS DETAILED:', {
+      insights: results.insights,
+      insightsType: typeof results.insights,
+      isArray: Array.isArray(results.insights),
+      length: results.insights.length
+    });
+    
+    if (Array.isArray(results.insights)) {
+      results.insights.forEach((insight, index) => {
+        console.log(`🔍 INSIGHT ${index}:`, insight);
+      });
+    }
+  } else {
+    console.log('❌ NO INSIGHTS IN PROCESSED RESULTS');
+  }
 
   const handleShowPaymentModal = () => {
     try {
@@ -240,21 +270,41 @@ export default function AnalysisPanel({
         </div>
       )}
 
-      {/* Enhanced Analysis Content with Better Error Handling */}
-      {(() => {
-        const hasInsights = results?.insights && Array.isArray(results.insights) && results.insights.length > 0;
-        
-        console.log('🎯 Render condition check:', {
-          hasResults: !!results,
-          hasInsights,
-          insightsCount: results?.insights?.length || 0,
-          isPaidAnalysis,
-          resultsType: typeof results
-        });
-        
-        return hasInsights;
-      })() ? (
-        <div className="px-6 pb-6">
+      {/* ALWAYS SHOW ANALYSIS CONTENT FOR DEBUGGING */}
+      <div className="px-6 pb-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <h4 className="font-semibold text-yellow-800 mb-2">🔍 Debug: Analysis Panel Content Check</h4>
+          <div className="text-sm space-y-1">
+            <div><strong>Has Results:</strong> {results ? 'YES' : 'NO'}</div>
+            <div><strong>Results Type:</strong> {typeof results}</div>
+            <div><strong>Has Insights:</strong> {results?.insights ? 'YES' : 'NO'}</div>
+            <div><strong>Insights Type:</strong> {typeof results?.insights}</div>
+            <div><strong>Is Insights Array:</strong> {Array.isArray(results?.insights) ? 'YES' : 'NO'}</div>
+            <div><strong>Insights Length:</strong> {Array.isArray(results?.insights) ? results.insights.length : 'N/A'}</div>
+            {results && (
+              <details className="mt-2">
+                <summary className="cursor-pointer">Show Raw Results</summary>
+                <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+                  {JSON.stringify(results, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+
+        {(() => {
+          const hasInsights = results?.insights && Array.isArray(results.insights) && results.insights.length > 0;
+          
+          console.log('🎯 Render condition check:', {
+            hasResults: !!results,
+            hasInsights,
+            insightsCount: results?.insights?.length || 0,
+            isPaidAnalysis,
+            resultsType: typeof results
+          });
+          
+          return hasInsights;
+        })() ? (
           <div className="space-y-4">
             {(results?.insights || []).map((insight: any, index: number) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white">

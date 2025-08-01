@@ -37,15 +37,43 @@ export function useDocumentAnalysis(documentId: number) {
     // Completely suppress errors for this query since no analysis is expected for new docs
     throwOnError: false,
     onSuccess: (data) => {
-      console.log('🔍 Analysis data fetched successfully:', {
+      console.log('🔍 CRITICAL: Analysis data fetched successfully:', {
         hasData: !!data,
         dataType: typeof data,
         hasResults: !!data?.results,
         resultsType: typeof data?.results,
         hasInsights: !!data?.results?.insights,
         insightsCount: data?.results?.insights?.length || 0,
+        
+        // DETAILED STRUCTURE INSPECTION
+        dataKeys: data ? Object.keys(data) : [],
+        resultsKeys: data?.results ? Object.keys(data.results) : [],
+        insightsType: typeof data?.results?.insights,
+        isInsightsArray: Array.isArray(data?.results?.insights),
+        
         fullData: data
       });
+      
+      // SEPARATE DETAILED LOGS
+      console.log('🔍 FULL API RESPONSE:', JSON.stringify(data, null, 2));
+      
+      if (data?.results) {
+        console.log('🔍 RESULTS OBJECT DETAILED:', data.results);
+        
+        if (data.results.insights) {
+          console.log('🔍 INSIGHTS ARRAY DETAILED:', data.results.insights);
+          
+          if (Array.isArray(data.results.insights)) {
+            data.results.insights.forEach((insight, index) => {
+              console.log(`🔍 API INSIGHT ${index}:`, insight);
+            });
+          }
+        } else {
+          console.log('❌ NO INSIGHTS IN API RESPONSE RESULTS');
+        }
+      } else {
+        console.log('❌ NO RESULTS IN API RESPONSE');
+      }
     },
     onError: (error) => {
       console.log('⚠️ Analysis fetch error (expected for new docs):', error);
