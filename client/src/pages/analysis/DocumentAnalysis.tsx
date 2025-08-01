@@ -1,7 +1,6 @@
 import { useParams, useLocation } from 'wouter';
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import DocumentViewer from '@/components/DocumentViewer';
+import { motion } from 'framer-motion';
 import AnalysisPanel from '@/components/AnalysisPanel';
 import SimpleLoader from '@/components/SimpleLoader';
 import PaymentModal from '@/components/PaymentModal';
@@ -60,64 +59,19 @@ export default function DocumentAnalysis() {
     analysisError
   } = useDocumentAnalysis(documentId);
   
-  // ENHANCED Debug logging for development - CRITICAL DEBUGGING
+  // Debug logging for development
   useEffect(() => {
-    console.log('🚨 CRITICAL DEBUG - DocumentAnalysis state:', {
+    console.log('DocumentAnalysis state:', {
       documentId,
       hasDocument: !!document,
       hasAnalysis: !!analysis,
-      analysisId: analysis?.id,
-      analysisIsPaid: analysis?.isPaid,
       hasAnalysisResults: !!analysis?.results,
-      analysisResultsType: typeof analysis?.results,
-      analysisResultsInsights: analysis?.results?.insights?.length || 0,
+      hasInsights: !!analysis?.results?.insights,
+      insightsCount: analysis?.results?.insights?.length || 0,
       isLoading,
-      isAnalysisComplete,
-      isFullAnalysisComplete,
-      isAnalyzing,
-      hasAnalysisError: !!analysisError,
-      
-      // DETAILED ANALYSIS OBJECT INSPECTION
-      analysisKeys: analysis ? Object.keys(analysis) : [],
-      analysisObject: analysis,
-      
-      // DETAILED RESULTS INSPECTION
-      resultsKeys: analysis?.results ? Object.keys(analysis.results) : [],
-      resultsObject: analysis?.results,
-      
-      // DETAILED INSIGHTS INSPECTION
-      insightsArray: analysis?.results?.insights,
-      insightsType: typeof analysis?.results?.insights,
-      isInsightsArray: Array.isArray(analysis?.results?.insights),
-      firstInsight: analysis?.results?.insights?.[0],
+      isAnalyzing
     });
-    
-    // SEPARATE LOG FOR RESULTS TO AVOID TRUNCATION
-    if (analysis?.results) {
-      console.log('🔍 FULL ANALYSIS RESULTS OBJECT:', JSON.stringify(analysis.results, null, 2));
-      
-      if (analysis.results.insights) {
-        console.log('🔍 INSIGHTS DETAILED INSPECTION:', {
-          hasInsights: !!analysis.results.insights,
-          insightsCount: analysis.results.insights?.length || 0,
-          insightsType: typeof analysis.results.insights,
-          isArray: Array.isArray(analysis.results.insights),
-          fullInsights: analysis.results.insights
-        });
-        
-        // Log each insight individually
-        if (Array.isArray(analysis.results.insights)) {
-          analysis.results.insights.forEach((insight, index) => {
-            console.log(`🔍 INSIGHT ${index}:`, insight);
-          });
-        }
-      } else {
-        console.log('❌ NO INSIGHTS FOUND IN RESULTS');
-      }
-    } else {
-      console.log('❌ NO RESULTS FOUND IN ANALYSIS');
-    }
-  }, [documentId, document, analysis, isLoading, isAnalysisComplete, isFullAnalysisComplete, isAnalyzing, analysisError]);
+  }, [documentId, document, analysis, isLoading, isAnalyzing]);
   
   // Handle payment success from Stripe redirect
   useEffect(() => {
@@ -283,41 +237,7 @@ export default function DocumentAnalysis() {
           />
           {analysis ? (
             <div className="space-y-8">
-              {/* TEMPORARY DEBUG SECTION */}
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <h3 className="text-lg font-semibold text-red-800 mb-3">🚨 DEBUG MODE - Analysis Data</h3>
-                <div className="space-y-2 text-sm">
-                  <div><strong>Analysis ID:</strong> {analysis.id}</div>
-                  <div><strong>Document ID:</strong> {analysis.documentId}</div>
-                  <div><strong>Is Paid:</strong> {analysis.isPaid ? 'YES' : 'NO'}</div>
-                  <div><strong>Has Results:</strong> {analysis.results ? 'YES' : 'NO'}</div>
-                  <div><strong>Results Type:</strong> {typeof analysis.results}</div>
-                  <div><strong>Results Keys:</strong> {analysis.results ? Object.keys(analysis.results).join(', ') : 'NONE'}</div>
-                  <div><strong>Has Insights:</strong> {analysis.results?.insights ? 'YES' : 'NO'}</div>
-                  <div><strong>Insights Type:</strong> {typeof analysis.results?.insights}</div>
-                  <div><strong>Insights Count:</strong> {Array.isArray(analysis.results?.insights) ? analysis.results.insights.length : 'NOT ARRAY'}</div>
-                </div>
-                
-                {analysis.results && (
-                  <details className="mt-4">
-                    <summary className="cursor-pointer text-red-800 font-medium">Show Raw Analysis Results JSON</summary>
-                    <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-96">
-                      {JSON.stringify(analysis.results, null, 2)}
-                    </pre>
-                  </details>
-                )}
-                
-                {analysis.results?.insights && (
-                  <details className="mt-4">
-                    <summary className="cursor-pointer text-red-800 font-medium">Show Raw Insights Array</summary>
-                    <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-96">
-                      {JSON.stringify(analysis.results.insights, null, 2)}
-                    </pre>
-                  </details>
-                )}
-              </div>
-              
-              {/* Analysis Results - Display Immediately */}
+              {/* Analysis Results */}
               <AnalysisPanel
                 analysis={analysis}
                 isPaidAnalysis={analysis.isPaid}
