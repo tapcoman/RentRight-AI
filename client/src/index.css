@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Animation for the path drawing */
+.path-animation {
+  animation: dash 5s linear infinite;
+}
+
+/* Animation for the ticker moving from right to left (rtl) */
+.ticker-animation-rtl {
+  animation: ticker-rtl 30s linear infinite;
+}
+
+/* Scale pulse animation for subtle growing and shrinking */
+.scale-pulse-animate {
+  animation: scale-pulse 6s ease-in-out infinite;
+}
+
+/* Floating animation for elements */
+.float-animate {
+  animation: float-animation 8s ease-in-out infinite;
+}
+
+/* Pulse animation for elements */
+.pulse-animate {
+  animation: pulse-animation 4s ease-in-out infinite;
+}
+
+/* Border pulse animation */
+.border-pulse-animate {
+  animation: border-pulse 3s ease-in-out infinite;
+}
+
+/* Hover effect for the CTA button */
+.cta-button-hover:hover {
+  box-shadow: 0 0 20px 5px rgba(14, 165, 233, 0.3);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Transition for gradient effects */
+.gradient-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Horizontal progress bar animation */
+@keyframes progress-horizontal {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Path dash animation for dotted line */
+@keyframes dash {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+/* Ticker animation from right to left */
+@keyframes ticker-rtl {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Scale pulse animation keyframes */
+@keyframes scale-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Float animation keyframes */
+@keyframes float-animation {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Pulse animation keyframes */
+@keyframes pulse-animation {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Border pulse animation keyframes */
+@keyframes border-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(14, 165, 233, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
+  }
+}
+
+/* Shimmer effect */
+.shimmer {
+  position: relative;
+  display: inline;
+  background: linear-gradient(90deg, 
+    #0ea5e9 0%, 
+    #38bdf8 25%,
+    #7dd3fc 50%, 
+    #38bdf8 75%,
+    #0ea5e9 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* New subtle pulse animation */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-scan {
+  animation: scan 3s ease-in-out infinite;
+}
+
+/* Progress bar animation */
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes progress-bar {
+  0% {
+    width: 0%;
+  }
+}
+
+.animate-progress {
+  animation: progress-bar 1.2s ease-out forwards;
+}

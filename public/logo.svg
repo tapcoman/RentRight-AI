@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="40" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background -->
+  <path d="M20 0C17.5 6 10 8 5 8.5v16C5 31 12 36 20 40c8-4 15-9 15-15.5v-16C30 8 22.5 6 20 0z" fill="#2C5282"/>
+  
+  <!-- Lock inside shield -->
+  <rect x="14" y="15" width="12" height="10" rx="2" fill="#6193E0"/>
+  <rect x="17" y="11" width="6" height="8" rx="3" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  
+  <!-- Text -->
+  <text x="45" y="26" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2C5282">LeaseGuard</text>
+</svg>
