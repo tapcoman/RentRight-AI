@@ -234,8 +234,8 @@ export default function AnalysisPanel({
       )}
 
       {/* Analysis Content */}
-      <div className="px-6 pb-6">
-        {results?.insights && Array.isArray(results.insights) && results.insights.length > 0 ? (
+      {results?.insights && Array.isArray(results.insights) && results.insights.length > 0 ? (
+        <div className="px-6 pb-6">
           <div className="space-y-4">
             {(results?.insights || []).map((insight: any, index: number) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white">
