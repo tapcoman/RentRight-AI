@@ -78,36 +78,51 @@ The payment processing completes successfully, but users are not seeing analysis
 - Improve error messaging and user feedback
 - Test all interactive elements for responsiveness
 
-#### @tailwind-frontend-expert - PRIORITY 4: UI/UX Consistency & Polish
-**Focus: Improve overall UI/UX consistency and styling across the application**
+#### @tailwind-css-expert - URGENT PRIORITY: Yellow Color Elimination
+**Focus: Completely eliminate ALL yellow colors from signup/authentication pages**
 
-**Critical Issues to Address:**
-1. **Visual Consistency**: Ensure all components follow the same design system
-2. **Responsive Design**: Fix any mobile/desktop layout issues
-3. **Color Scheme**: Maintain consistent orange (#EC7134) brand colors
-4. **Animations & Transitions**: Smooth out any jarring transitions
+**CRITICAL ISSUE:**
+Persistent bright yellow colors are still visible on the signup page despite previous attempts to remove them. This is affecting user experience and brand consistency.
+
+**Specific Yellow Color Elimination Tasks:**
+1. **Authentication Page Audit**: Search `/client/src/pages/auth-page.tsx` for ANY yellow colors
+2. **Form Components**: Check all input fields, validation states, and error messages
+3. **UI Component Library**: Audit `/client/src/components/ui/` for yellow in:
+   - `button.tsx` (warning states, hover effects)
+   - `input.tsx` (focus states, validation)
+   - `alert.tsx` (warning alerts)
+   - `badge.tsx` (warning badges)
+   - `tabs.tsx` (active/selected states)
+4. **Global Styles**: Check `/client/src/index.css` for yellow CSS variables or classes
+5. **Tailwind Config**: Audit `/tailwind.config.ts` for any yellow color definitions
+6. **React Hook Form Validation**: Check error/validation styling that might use yellow
 
 **Key Files to Examine:**
-- `/client/src/index.css` (global styles)
-- `/tailwind.config.ts` (configuration)
-- All component styling implementations
-- `/client/src/components/ui/` directory
+- `/client/src/pages/auth-page.tsx` (signup/login forms)
+- `/client/src/components/ui/button.tsx` (button states)
+- `/client/src/components/ui/input.tsx` (input focus/validation)
+- `/client/src/components/ui/tabs.tsx` (tab selection)
+- `/client/src/components/ui/alert.tsx` (warning states)
+- `/client/src/index.css` (global yellow definitions)
+- `/tailwind.config.ts` (color configuration)
 
-**Specific Tasks:**
-- Audit and standardize button styles across components
-- Fix any responsive design issues
-- Ensure consistent spacing and typography
-- Polish loading animations and transitions
+**Search Patterns to Use:**
+- Search for: "yellow", "amber", "#FFFF", "#FFF0", "bg-yellow", "text-yellow", "border-yellow"
+- Check for: warning states, validation feedback, focus indicators
+- Look for: CSS custom properties with yellow values
+
+**Expected Outcome:**
+Zero yellow colors anywhere in the signup/registration flow. All warning states, validation feedback, and UI elements should use the brand orange (#EC7134) or neutral colors only.
 
 ---
 
 ## Workflow Instructions
 
-### For Immediate Critical Fix (Payment Flow):
-1. **@react-state-manager**: Start immediately with payment success handling
-2. **@react-component-architect**: Work in parallel on component integration
-3. **@frontend-developer**: Focus on button functionality once payment flow is stable
-4. **@tailwind-frontend-expert**: Provide styling support as needed
+### For Immediate Critical Fixes:
+1. **@tailwind-css-expert**: URGENT - Eliminate ALL yellow colors from signup page immediately
+2. **@react-state-manager**: Start payment success handling after color fix
+3. **@react-component-architect**: Work in parallel on component integration
+4. **@frontend-developer**: Focus on button functionality once critical issues are resolved
 
 ### Communication Protocol:
 - Each agent should document their findings and changes
